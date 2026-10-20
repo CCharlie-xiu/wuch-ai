@@ -1,0 +1,40 @@
+{
+  "name": "wuch-ai",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "description": "说一句，界面在画布上长出来。https://wuch-ai.net",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter @openui-lab/server dev",
+    "mock": "bun run --filter @openui-lab/server mock",
+    "test": "bun tests/smoke.mjs",
+    "test:router": "bun tests/line-router.mjs",
+    "test:budget": "bun tests/tool-budget.mjs",
+    "test:usage": "bun tests/usage.mjs",
+    "test:compress": "bun tests/context-compress.mjs",
+    "test:layout": "bun tests/layout.mjs",
+    "test:e2e": "bun tests/e2e-prose.mjs",
+    "test:dsl": "bun test packages/ui-dsl",
+    "test:catalog": "bun test packages/catalog",
+    "test:server": "bun run --filter @openui-lab/server test",
+    "typecheck:dsl": "bun run --filter @openui-lab/ui-dsl typecheck",
+    "cf:dev": "bun run --filter @openui-lab/cloudflare dev",
+    "cf:deploy": "bun run --filter @openui-lab/cloudflare deploy",
+    "cf:migrate": "bun run --filter @openui-lab/cloudflare db:migrate:remote"
+  },
+  "dependencies": {
+    "@openui-lab/catalog": "workspace:*",
+    "@openui-lab/compiler": "workspace:*",
+    "@openui-lab/fixtures": "workspace:*",
+    "@openui-lab/protocol": "workspace:*",
+    "@openui-lab/web": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "typescript": "^7.0.2"
+  }
+}

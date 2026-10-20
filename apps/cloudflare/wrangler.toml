@@ -1,0 +1,27 @@
+name = "openui-lab"
+main = "src/index.js"
+compatibility_date = "2026-10-20"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# API / proxy 先走 Worker；其余回落到静态资源
+run_worker_first = ["/api/*", "/proxy", "/proxy/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "openui-lab"
+database_id = "7128a1c7-b564-45ec-9941-01d33b2190b8"
+migrations_dir = "migrations"
+
+[[routes]]
+pattern = "wuch-ai.net"
+custom_domain = true
+
+[observability]
+enabled = true
+
+[observability.traces]
+enabled = true

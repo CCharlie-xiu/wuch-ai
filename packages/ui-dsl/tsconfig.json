@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    /* Bun 运行时提供 bun:test 等类型 */
+    "types": ["bun"],
+
+    /* Bun 直接跑 .ts，导入时显式带 .ts 后缀；不需要产出，也就没有构建步骤 */
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+
+    /* 严格性：AST 与诊断都是可判别联合，靠 strict 才能真窄化 */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "tests"]
+}

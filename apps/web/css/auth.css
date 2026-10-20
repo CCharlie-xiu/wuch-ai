@@ -1,0 +1,450 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   登录路由页（apps/web/login.html）+ 顶栏账号菜单
+   ───────────────────────────────────────────────────────────────────────────
+   构图借用编辑设计：一整张纸，三栏用 1px 线分开，中间只放 logo 和品牌名。
+   · 左栏竖排宣言，右栏是登录 / 注册。
+   · 登录栏不是浮层 —— 它就在网格里，缩放窗口时和封面一起重排。
+   · 一屏放得下时（≥901）不滚动；更窄时整页纵向滚动，顺序变成 封面 → 登录。
+   颜色、字体全部复用 app.css 的 token，不在这里另造一套。
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.auth-page {
+  background: var(--card);
+  overflow: auto;
+  --auth-left: 208px;
+  --auth-right: 392px;
+  --auth-pad: clamp(20px, 2.2vw, 34px);
+}
+
+.auth-shell {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: 56px minmax(0, 1fr) 46px;
+  background: var(--card);
+}
+
+/* ── 顶栏 ──────────────────────────────────────────────────────────────── */
+.auth-top {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 var(--auth-pad);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.auth-brand {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text); text-decoration: none; flex: 0 0 auto;
+}
+.auth-brand-mark { display: block; width: 30px; height: 30px; overflow: visible; }
+.auth-brand-name {
+  font-family: var(--font-editorial); font-size: 17px; letter-spacing: -.01em;
+}
+.auth-top-sep { color: var(--dim); font-size: 12px; }
+.auth-top-meta {
+  font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+  white-space: nowrap;
+}
+.auth-clock {
+  font-family: var(--mono); font-size: 11px; color: var(--subtle);
+  font-variant-numeric: tabular-nums; letter-spacing: .04em;
+}
+
+/* ── 三栏网格 ───────────────────────────────────────────────────────────── */
+.auth-grid {
+  display: grid;
+  grid-template-columns: var(--auth-left) minmax(0, 1fr) var(--auth-right);
+  min-height: 0;
+}
+
+/* 栏头：编号 + 短线 + 小字，右栏和左栏共用 */
+.rail-index {
+  font-family: var(--mono); font-size: 10px; color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.rail-rule { display: block; background: var(--border); }
+.rail-cap {
+  font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+  white-space: nowrap;
+}
+
+.auth-rail-left {
+  display: flex; flex-direction: column; align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px; padding: 26px var(--auth-pad) 30px;
+  border-right: 1px solid var(--border);
+}
+.auth-rail-left .rail-rule { width: 1px; height: 54px; flex: 0 0 auto; margin-bottom: auto; }
+.rail-body { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.rail-vert {
+  margin: 0; writing-mode: vertical-rl;
+  font-family: var(--font-editorial); font-size: 16px; line-height: 1.9;
+  letter-spacing: .26em; color: var(--text);
+}
+
+/* ── 中：品牌舞台 ───────────────────────────────────────────────────────── */
+.auth-stage {
+  position: relative; min-width: 0;
+  display: grid; place-items: center;
+  padding: 40px 24px 88px;
+}
+.stage-center {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  max-width: 100%;
+}
+.stage-logo {
+  width: 78px; height: 78px; display: block;
+  animation: auth-rise .8s cubic-bezier(.22, 1, .36, 1) both;
+}
+.stage-wordmark {
+  margin: 14px 0 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(46px, 6.1vw, 92px);
+  font-weight: 400; line-height: .96; letter-spacing: -.025em;
+  color: var(--text);
+  animation: auth-rise .9s .06s cubic-bezier(.22, 1, .36, 1) both;
+}
+.stage-reg {
+  font-family: var(--font-ui);
+  font-size: .22em; font-weight: 400; letter-spacing: 0;
+  vertical-align: super; margin-left: .12em; color: var(--subtle);
+}
+.stage-sub {
+  margin: 18px 0 0;
+  font-size: 12px; letter-spacing: .04em; color: var(--subtle);
+  animation: auth-rise .9s .12s cubic-bezier(.22, 1, .36, 1) both;
+}
+.stage-line {
+  margin: 14px 0 0;
+  font-family: var(--font-editorial); font-size: 15px; line-height: 1.9; color: var(--muted);
+  animation: auth-rise .9s .18s cubic-bezier(.22, 1, .36, 1) both;
+}
+.stage-cta {
+  margin-top: 30px; height: 34px; padding: 0 15px;
+  display: inline-flex; align-items: center; gap: 9px;
+  font: inherit; font-size: 12px; letter-spacing: .06em; color: var(--text);
+  background: transparent; border: 1px solid var(--border); border-radius: 999px;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+  animation: auth-rise .9s .24s cubic-bezier(.22, 1, .36, 1) both;
+}
+.stage-cta svg { transition: transform .18s ease; color: var(--subtle); }
+.stage-cta:hover { background: var(--panel); border-color: var(--line-strong); }
+.stage-cta:hover svg { transform: translateY(2px); color: var(--accent); }
+.stage-cta:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+
+.stage-foot {
+  position: absolute; left: 24px; right: 24px; bottom: 24px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+  flex-wrap: wrap;
+}
+.stage-foot-dot { width: 3px; height: 3px; border-radius: 999px; background: var(--dim); }
+
+/* ── 右：登录 / 注册 ────────────────────────────────────────────────────── */
+.auth-rail-right {
+  display: flex; flex-direction: column;
+  padding: 26px var(--auth-pad) 24px;
+  border-left: 1px solid var(--border);
+  min-width: 0;
+}
+.access-head { display: flex; align-items: center; gap: 10px; }
+.access-head .rail-rule { flex: 1 1 auto; height: 1px; }
+
+.access-add {
+  margin: 14px 0 0; padding: 8px 10px;
+  font-size: 11.5px; line-height: 1.55; color: var(--text);
+  background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 8px;
+}
+.access-add[hidden] { display: none; }
+
+.auth-card { margin-top: 16px; min-width: 0; }
+
+.auth-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--border-soft); }
+.auth-tabs button {
+  position: relative; margin-bottom: -1px; padding: 0 0 10px;
+  font: inherit; font-size: 13px; color: var(--subtle);
+  background: transparent; border: 0; cursor: pointer;
+  transition: color .14s ease;
+}
+.auth-tabs button::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px;
+  background: var(--text); transform: scaleX(0); transform-origin: left;
+  transition: transform .22s cubic-bezier(.22, 1, .36, 1);
+}
+.auth-tabs button:hover { color: var(--text); }
+.auth-tabs button.active { color: var(--text); font-weight: 600; }
+.auth-tabs button.active::after { transform: scaleX(1); }
+.auth-tabs button:focus-visible { outline: none; color: var(--text); box-shadow: 0 1px 0 var(--accent); }
+
+.auth-lead {
+  margin: 14px 0 0; font-size: 12px; line-height: 1.7; color: var(--subtle);
+}
+
+/* 已有账号：一个胶囊一行，点一下就切 */
+.auth-recent { margin-top: 16px; }
+.auth-recent[hidden] { display: none; }
+.auth-recent-label {
+  display: block; margin-bottom: 7px;
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+}
+.auth-recent-list {
+  display: flex; flex-wrap: nowrap; gap: 6px;
+  overflow-x: auto; padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.auth-recent-list::-webkit-scrollbar { display: none; }
+.auth-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 28px; padding: 0 10px;
+  font: inherit; font-size: 12px; color: var(--text);
+  background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+  cursor: pointer; max-width: 100%;
+  transition: background .14s ease, border-color .14s ease;
+}
+.auth-chip:hover { background: var(--panel); border-color: var(--line-strong); }
+.auth-chip.is-current { border-color: var(--accent-line); background: var(--accent-soft); }
+.auth-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auth-chip-tag { font-size: 9.5px; letter-spacing: .04em; color: var(--dim); flex: 0 0 auto; }
+
+/* 表单：下划线输入，比一圈圈框更接近「一张纸」 */
+.auth-form { display: flex; flex-direction: column; }
+.auth-field { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.auth-field[hidden] { display: none; }
+.af-label {
+  font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--subtle);
+}
+.auth-field input {
+  height: 38px; width: 100%; padding: 0 2px;
+  font: inherit; font-size: 13.5px; color: var(--text);
+  background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0;
+  transition: border-color .16s ease;
+}
+.auth-field input::placeholder { color: var(--dim); }
+.auth-field input:focus { outline: none; border-bottom-color: var(--accent); }
+.auth-field:focus-within .af-label { color: var(--text); }
+.af-pass { position: relative; display: flex; align-items: center; }
+.af-pass input { flex: 1 1 auto; padding-right: 48px; }
+.af-peek {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  padding: 4px 2px; font: inherit; font-size: 11px; color: var(--subtle);
+  background: transparent; border: 0; cursor: pointer;
+}
+.af-peek:hover { color: var(--text); }
+.af-peek:focus-visible { outline: none; color: var(--accent); }
+
+.auth-err {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin: 12px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--danger);
+}
+.auth-err[hidden] { display: none; }
+.auth-err::before {
+  content: ''; flex: 0 0 auto; width: 4px; height: 4px; margin-top: 7px;
+  border-radius: 999px; background: currentColor;
+}
+
+.auth-submit {
+  margin-top: 20px; height: 42px; width: 100%; padding: 0 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--accent-text);
+  background: var(--accent); border: 1px solid var(--accent); border-radius: 8px;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, opacity .16s ease;
+}
+.auth-submit svg { transition: transform .18s ease; }
+.auth-submit:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.auth-submit:hover svg { transform: translateX(2px); }
+.auth-submit:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+.auth-submit:disabled { opacity: .55; cursor: progress; }
+.auth-submit.is-busy svg { animation: auth-nudge 1s ease-in-out infinite; }
+
+.auth-or {
+  display: flex; align-items: center; gap: 10px; margin: 18px 0 12px;
+  color: var(--dim);
+}
+.auth-or i { flex: 1 1 auto; height: 1px; background: var(--border-soft); }
+.auth-or span { font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; }
+
+.auth-oauth-group { display: flex; flex-direction: column; gap: 8px; }
+.auth-oauth {
+  height: 40px; width: 100%; padding: 0 12px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font: inherit; font-size: 12.5px; color: var(--text);
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease;
+}
+.auth-oauth svg { color: var(--muted); }
+.auth-oauth:hover { background: var(--panel); border-color: var(--line-strong); }
+.auth-oauth:hover svg { color: var(--text); }
+.auth-oauth:disabled { opacity: .55; cursor: progress; }
+.auth-oauth:disabled:hover { background: var(--card); border-color: var(--border); }
+.auth-oauth:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+
+.auth-fine {
+  margin: 16px 0 0; font-size: 10.5px; line-height: 1.75; color: var(--dim);
+  text-wrap: pretty;
+}
+
+.access-note {
+  margin-top: 26px; padding-top: 0;
+  max-width: 300px;
+}
+.access-note-k {
+  margin: 0 0 6px; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+}
+.access-note-v {
+  margin: 0; font-size: 10.5px; line-height: 1.8; color: var(--dim); text-wrap: pretty;
+}
+
+.access-foot {
+  margin: auto 0 0; padding-top: 16px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--dim);
+}
+.access-foot a { color: var(--subtle); text-decoration: none; }
+.access-foot a:hover { color: var(--text); }
+
+/* 矮窗口（常见笔记本 1280×800 / 1440×900）：收一档间距，优先保证一屏放完表单 */
+@media (max-height: 900px) and (min-width: 901px) {
+  .auth-rail-right { padding-top: 20px; padding-bottom: 16px; }
+  .auth-card { margin-top: 12px; }
+  .auth-recent { margin-top: 12px; }
+  .auth-field { margin-top: 12px; }
+  .auth-field input { height: 36px; }
+  .auth-submit { margin-top: 16px; height: 40px; }
+  .auth-or { margin: 14px 0 10px; }
+  .auth-oauth { height: 38px; }
+  .auth-fine { margin-top: 12px; font-size: 10px; line-height: 1.65; }
+  .access-note { display: none; }
+  .access-foot { padding-top: 12px; }
+  .auth-stage { padding-bottom: 66px; }
+  .stage-cta { margin-top: 22px; }
+}
+
+/* ── 页脚 ──────────────────────────────────────────────────────────────── */
+.auth-foot {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 var(--auth-pad);
+  border-top: 1px solid var(--border);
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+}
+.auth-foot-links { display: flex; align-items: center; gap: 18px; }
+.auth-foot-links a { color: var(--subtle); text-decoration: none; }
+.auth-foot-links a:hover { color: var(--text); }
+
+/* ── 动效 ──────────────────────────────────────────────────────────────── */
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(10px); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes auth-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+
+/* ── 响应式 ────────────────────────────────────────────────────────────── */
+@media (max-width: 1240px) {
+  .auth-page { --auth-left: 168px; --auth-right: 360px; }
+}
+/* 左栏是装饰：先牺牲它，保住中间的品牌和右边的表单 */
+@media (max-width: 1080px) {
+  .auth-grid { grid-template-columns: minmax(0, 1fr) var(--auth-right); }
+  .auth-rail-left { display: none; }
+}
+@media (max-width: 900px) {
+  .auth-shell { grid-template-rows: 56px auto 46px; }
+  .auth-grid { grid-template-columns: minmax(0, 1fr); }
+  .auth-stage { min-height: 40vh; padding: 34px 20px 26px; }
+  .stage-foot { position: static; margin-top: 24px; }
+  .auth-rail-right {
+    border-left: 0; border-top: 1px solid var(--border);
+    padding: 24px 20px 30px;
+    max-width: none;
+  }
+  .auth-card, .access-foot { width: 100%; max-width: 420px; }
+  .access-foot { margin-top: 22px; padding-top: 0; }
+}
+@media (max-width: 520px) {
+  .auth-page { --auth-pad: 16px; }
+  .auth-top-meta, .auth-top-sep { display: none; }
+  .auth-stage { min-height: 34vh; padding: 28px 16px 22px; }
+  .stage-wordmark { font-size: 44px; }
+  .stage-line { font-size: 13.5px; }
+  .stage-sub { font-size: 11px; }
+  .stage-logo { width: 62px; height: 62px; }
+  .stage-foot { gap: 8px; justify-content: flex-start; }
+  .auth-rail-right { padding: 20px 16px 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-logo, .stage-wordmark, .stage-sub, .stage-line, .stage-cta { animation: none; }
+  .auth-submit.is-busy svg { animation: none; }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   主应用顶栏：账号按钮 + 菜单
+   菜单是 popover（局部操作，不是路由页面）；「添加账号」和「退出」会跳登录路由。
+   ─────────────────────────────────────────────────────────────────────────── */
+.account-wrap { position: relative; display: flex; align-items: center; }
+.account-btn {
+  height: 30px; max-width: 168px; padding: 0 9px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font: inherit; font-size: 12.5px; color: var(--text);
+  background: transparent; border: 1px solid transparent; border-radius: 8px;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease;
+}
+.account-btn:hover { background: var(--panel-2); }
+.account-btn[aria-expanded="true"] { background: var(--panel-2); border-color: var(--border); }
+.account-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+.account-dot {
+  flex: 0 0 auto; width: 6px; height: 6px; border-radius: 999px; background: var(--ok);
+}
+.account-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-caret { color: var(--dim); flex: 0 0 auto; transition: transform .16s ease; }
+.account-btn[aria-expanded="true"] .account-caret { transform: rotate(180deg); }
+
+.account-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 60;
+  width: 308px; padding: 7px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow:
+    0 0 0 .5px rgba(16, 20, 26, .03),
+    0 2px 6px rgba(16, 20, 26, .06),
+    0 16px 40px -16px rgba(16, 20, 26, .3);
+}
+.account-menu[hidden] { display: none; }
+.am-head { padding: 8px 10px 11px; border-bottom: 1px solid var(--border-soft); margin-bottom: 5px; }
+.am-name { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.am-mail {
+  margin: 2px 0 0; font-family: var(--mono); font-size: 10.5px; color: var(--subtle);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.am-sec {
+  padding: 8px 10px 4px;
+  font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim);
+}
+.am-item {
+  width: 100%; min-height: 32px; padding: 6px 10px;
+  display: flex; align-items: center; gap: 8px;
+  font: inherit; font-size: 12.5px; text-align: left; color: var(--text);
+  background: transparent; border: 0; border-radius: 7px; cursor: pointer;
+}
+.am-item:hover { background: var(--panel); }
+.am-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-ring) inset; }
+.am-item.danger { color: var(--danger); }
+.am-item-muted { color: var(--muted); }
+.am-tag { margin-left: auto; font-size: 9.5px; letter-spacing: .04em; color: var(--dim); }
+.am-check { display: inline-grid; place-items: center; color: var(--accent); flex: 0 0 auto; }
+.am-sep { height: 1px; background: var(--border-soft); margin: 5px 4px; }
+.am-rename { display: flex; gap: 6px; padding: 2px 8px 6px; }
+.am-rename input {
+  flex: 1 1 auto; min-width: 0; height: 29px; padding: 0 8px;
+  font: inherit; font-size: 12.5px; color: var(--text);
+  background: var(--card); border: 1px solid var(--border); border-radius: 7px;
+}
+.am-rename input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.am-rename button {
+  flex: 0 0 auto; height: 29px; padding: 0 10px;
+  font: inherit; font-size: 12px; color: var(--accent-text);
+  background: var(--accent); border: 1px solid var(--accent); border-radius: 7px; cursor: pointer;
+}
+.am-rename button:disabled { opacity: .5; cursor: not-allowed; }

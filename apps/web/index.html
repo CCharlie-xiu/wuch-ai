@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>wuch-ai · 聊天</title>
+<link rel="preload" href="/vendor/fonts/lxgw-wenkai/files/lxgwwenkaigbscreen-subset-119.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/auth.css">
+<!-- 路由门禁：未登录直接整页跳到 /login（独立文档 + 独立 URL，不是盖一层浮层）。
+     必须内联在 head：等到模块脚本跑起来再跳，会先闪一下主界面。
+     key 名与 src/accounts.js 的 STORE/CURRENT 一致。 -->
+<script>
+  try {
+    var id = localStorage.getItem('wuch-ai.current');
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('wuch-ai.accounts') || '[]'); } catch (e) {}
+    // current 指向一个已经不存在的账号（换设备 / 手动清过 key）也算未登录
+    var gone = id && Array.isArray(list) && list.length && !list.some(function (a) { return a.id === id; });
+    if (!id || gone) {
+      if (gone) localStorage.removeItem('wuch-ai.current');
+      location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
+    }
+  } catch (e) { /* 隐私模式下 localStorage 不可用，交给页面自己处理 */ }
+</script>
+<!-- 浏览器原生模块解析：不需要打包器就能 import @openui-lab/*。
+     这份映射就是本页的依赖清单 —— 没列进来的包，页面物理上拿不到。
+     服务端通过路由表把 /packages/* 映射到 packages/（见 apps/server/index.mjs）。 -->
+<script type="importmap">
+{
+  "imports": {
+    "@openui-lab/catalog": "/packages/catalog/src/index.js",
+    "@openui-lab/protocol": "/packages/protocol/src/index.js",
+    "@openui-lab/fixtures": "/packages/fixtures/src/index.js",
+    "@openui-lab/catalog/dom.js": "/packages/catalog/src/dom.js",
+    "@openui-lab/ui-dsl": "/packages/ui-dsl/src/index.ts",
+    "@openui-lab/compiler/compile.js": "/packages/compiler/src/compile.js",
+    "echarts": "/vendor/echarts.js",
+    "katex": "/vendor/katex/katex.mjs",
+    "marked": "/vendor/marked.js",
+    "@highlightjs/cdn-assets/": "/vendor/hljs/"
+  }
+}
+</script>
+</head>
+<body class="chat-page">
+
+<div class="shell" id="shell">
+  <header class="topbar">
+    <a class="brand" href="index.html" title="wuch-ai" aria-label="wuch-ai 首页">
+      <svg class="brand-mark" data-blob-logo width="34" height="34" aria-hidden="true"></svg>
+      <span class="brand-name">wuch-ai</span>
+    </a>
+    <nav class="crumbs">
+      <i>›</i>
+      <span id="crumb" class="crumb-now">新会话</span>
+    </nav>
+    <div class="grow"></div>
+    <span id="status-line" class="status-line"></span>
+    <div class="top-actions">
+      <div class="account-wrap">
+        <button id="account-btn" class="account-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="账号"></button>
+      </div>
+      <a class="icon-btn" href="demos.html" title="演示回放" aria-label="演示回放">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5v15l13-7.5z"/></svg>
+      </a>
+      <button id="top-copy" class="icon-btn" title="复制编译产物" aria-label="复制编译产物">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+      </button>
+      <button id="top-fullscreen" class="icon-btn fs-btn" title="整页全屏" aria-label="整页全屏" data-fs-title="整页全屏">
+        <svg class="fs-enter" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 15v5h-5M20 9V4h-5M4 15v5h5"/></svg>
+        <svg class="fs-exit" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 20v-5h5M15 4v5h5M9 20v-5H4"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- 左：展示（实时界面 + 检视器） -->
+    <section id="panel" class="preview-pane">
+      <div class="pane-toolbar">
+        <div id="tabs" class="tabbar">
+          <button data-tab="stage" class="active">界面</button>
+          <button data-tab="dil">原文</button>
+          <button data-tab="code">编译产物</button>
+          <button data-tab="json">JSON 文档</button>
+          <button data-tab="ops">操作</button>
+          <button data-tab="diag">诊断 / 沙箱</button>
+          <button data-tab="patch">流式统计</button>
+        </div>
+        <div class="grow"></div>
+        <div class="seg" role="group" aria-label="缩放">
+          <button id="zoom-out" class="icon-btn small" title="缩小" aria-label="缩小">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 12h12"/></svg>
+          </button>
+          <button id="zoom-reset" class="zoom-value" title="重置为 100%">100%</button>
+          <button id="zoom-in" class="icon-btn small" title="放大" aria-label="放大">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>
+          </button>
+        </div>
+        <button id="view-fit" class="icon-btn small" title="适配宽度（缩放回 100%）" aria-label="适配宽度">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14M21 5v14M7 12h10M10 9l-3 3 3 3M14 9l3 3-3 3"/></svg>
+        </button>
+        <button id="view-reload" class="icon-btn small" title="重新渲染" aria-label="重新渲染">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>
+        </button>
+        <button id="view-fullscreen" class="icon-btn small fs-btn" title="只全屏画布" aria-label="只全屏画布" data-fs-title="只全屏画布">
+          <svg class="fs-enter" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M13 7h4v4M11 17H7v-4M17 7 7 17"/></svg>
+          <svg class="fs-exit" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M17 11h-4V7M7 13h4v4M13 11l4-4M11 13l-4 4"/></svg>
+        </button>
+      </div>
+
+      <div class="panels">
+        <div class="panel active canvas" data-panel="stage">
+          <div class="canvas-card">
+            <div class="canvas-head">
+              <div class="canvas-titles">
+                <h2 id="canvas-title">实时界面</h2>
+                <p id="canvas-sub">模型写的界面会在这里边写边渲染</p>
+              </div>
+              <div id="version-nav" class="version-nav hidden" role="group" aria-label="画布版本">
+                <button id="version-back" class="icon-btn small" type="button" title="上一版（⌘[）" aria-label="上一版">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+                </button>
+                <button id="version-label" class="version-label" type="button" title="版本列表" aria-haspopup="menu" aria-expanded="false">v1/1</button>
+                <button id="version-forward" class="icon-btn small" type="button" title="下一版（⌘]）" aria-label="下一版">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+                <div id="version-menu" class="menu version-menu hidden" role="menu" aria-label="画布版本"></div>
+              </div>
+              <span id="canvas-badge" class="status-badge idle">待命</span>
+            </div>
+            <div id="stage" class="stage"></div>
+            <!-- 画布空着时的开场页：#stage 一有内容就由 CSS 自动藏起 -->
+            <div class="stage-hero" aria-label="开场">
+              <div class="hero-paper">
+                <span class="hero-watermark" aria-hidden="true">OPENUI</span>
+                <p class="hero-label">OpenUI Lab — 实时界面画布<br>Shanghai × Everywhere — Est. 2026</p>
+                <h1 class="hero-title">
+                  <span>安静的画布，</span>
+                  <span>正在<em>生长</em>的界面。</span>
+                </h1>
+                <p class="hero-sub">在右侧说一句你想要的，<br>它会在这里边写边渲染。</p>
+              </div>
+
+              <div class="hero-ads" aria-label="推荐（广告）">
+                <div class="ads-head">
+                  <span class="ads-label">推荐</span>
+                  <span class="ads-mark">广告</span>
+                  <span class="ads-domain">ccharlie-xiu.github.io</span>
+                </div>
+                <div class="ads-row">
+                  <a class="ad-card" href="https://ccharlie-xiu.github.io/aoci-wuch/" target="_blank" rel="noopener sponsored">
+                    <span class="ad-index">01</span>
+                    <b class="ad-title">经验，值得被带走。</b>
+                    <span class="ad-desc">从一个项目，到下一个项目。</span>
+                    <span class="ad-more">去看看 <i aria-hidden="true">↗</i></span>
+                  </a>
+                  <a class="ad-card" href="https://ccharlie-xiu.github.io/aoci-wuch/" target="_blank" rel="noopener sponsored">
+                    <span class="ad-index">02</span>
+                    <b class="ad-title">把好方法带进你的 AI。</b>
+                    <span class="ad-desc">一套持续生长的个人能力库，开新项目时直接复用。</span>
+                    <span class="ad-more">去看看 <i aria-hidden="true">↗</i></span>
+                  </a>
+                  <a class="ad-card" href="https://ccharlie-xiu.github.io/aoci-wuch/" target="_blank" rel="noopener sponsored">
+                    <span class="ad-index">03</span>
+                    <b class="ad-title">能力库包含技能</b>
+                    <span class="ad-desc">GitHub 授权 · 移动应用搭建 · DBX 连接 · LibTV 影像 · UI 提示设计 · 视频抽帧</span>
+                    <span class="ad-more">去看看 <i aria-hidden="true">↗</i></span>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="legend">
+              <span>拖动滑块、勾选、点选项：<b>不会产生模型调用</b></span>
+              <span>按 <code>turn:</code> 按钮或提交表单：<b>才会开新一轮</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="panel" data-panel="dil"><pre id="panel-dil"></pre></div>
+        <div class="panel" data-panel="code"><div id="code-meta" class="meta"></div><pre id="panel-code"></pre></div>
+        <div class="panel" data-panel="json"><pre id="panel-json"></pre></div>
+        <div class="panel" data-panel="ops"><pre id="panel-ops"></pre><div class="meta">二进制编码（varint 整数流 + 独立字符串表）</div><pre id="ops-hex"></pre></div>
+        <div class="panel" data-panel="diag"><pre id="panel-diag"></pre></div>
+        <div class="panel" data-panel="patch"><pre id="panel-patch"></pre><div class="meta">patch 事件日志</div><pre id="patch-log"></pre></div>
+      </div>
+
+      <div class="pane-foot">
+        <button id="open-settings" class="icon-btn small foot-settings" title="设置" aria-label="设置">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 14H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21 10h.1a2 2 0 1 1 0 4H21"/></svg>
+        </button>
+        <span id="hud" class="hud"></span>
+      </div>
+    </section>
+
+    <!-- 右：聊天（悬浮在展示区之上，可拖宽、可收起） -->
+    <aside class="chat-pane">
+      <div id="pane-grip" class="pane-grip" title="拖动调整宽度" role="separator" aria-orientation="vertical" aria-label="调整聊天面板宽度"></div>
+      <div class="chat-head">
+        <span id="chat-title" class="chat-title">新会话</span>
+        <div class="chat-actions">
+          <button id="chat-info" class="icon-btn small" title="这是什么" aria-label="说明">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+          </button>
+          <button id="chat-history" class="icon-btn small" title="历史会话" aria-label="历史会话" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg>
+          </button>
+          <button id="chat-clear" class="icon-btn small" title="新会话" aria-label="新会话">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M14.5 4.5 19 9l-9 9H5.5v-4.5z"/></svg>
+          </button>
+          <button id="chat-copy" class="icon-btn small" title="复制本轮 Markdown（界面内容、描述和源码）" aria-label="复制本轮 Markdown">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+          </button>
+          <button id="chat-collapse" class="icon-btn small" title="收起 AI 助手" aria-label="收起 AI 助手">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16M9 10l2 2-2 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="history-panel" class="history-panel" hidden>
+        <div class="history-head">
+          <span class="panel-title">历史会话</span>
+          <span id="history-count" class="history-count"></span>
+          <button id="history-new" class="mini" type="button">新会话</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
+      </div>
+
+      <div id="messages" class="messages">
+        <div id="empty" class="intro-card">
+          <svg class="intro-mark" data-blob-logo width="52" height="52" aria-hidden="true"></svg>
+          <h3>开始描述你想要的世界</h3>
+          <p>wuch-ai 让模型直接写界面，服务端编译成程序，在沙箱里跑出交互组件。
+             填一个 OpenAI 兼容端点就能开始——Key 只存在这台浏览器的 localStorage。</p>
+          <div class="empty-actions">
+            <button id="empty-settings" class="send small">打开设置</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 输入区：上方一行元信息（无边框），下方是一张干净的输入卡。
+           之前把状态胶囊和思考开关塞进卡片里，等于在输入框内部又做了一层工具条，
+           三层叠在一起就不像「一个输入框」了。 -->
+      <div class="composer-wrap">
+        <div class="composer-meta">
+          <span class="meta-dot" aria-hidden="true"></span>
+          <span id="composer-chip-text">实时界面 · 新会话</span>
+          <div class="grow"></div>
+          <!-- 思考模式：只有 DeepSeek 端点认这个开关（别的端点会 400）。
+               点一下循环切换 关闭 → 低 → 高 → 最高，见 chat.js 的 paintThink。 -->
+          <button type="button" id="think-btn" class="think-btn" hidden aria-label="思考强度"></button>
+        </div>
+        <form id="composer" class="composer">
+          <div id="attach-chips" class="attach-row" hidden></div>
+          <textarea id="prompt" rows="1" placeholder="描述你想要的界面…"></textarea>
+          <div class="composer-bar">
+            <button type="button" id="composer-add" class="composer-add" title="添加文件、选择技能" aria-label="添加文件、选择技能" aria-haspopup="menu" aria-expanded="false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <div id="skill-chips" class="skill-chips"></div>
+            <div class="grow"></div>
+            <!-- 当前会话的 token 用量：只在快满时出现，平时不占位置。
+                 上下文压缩的触发依据看这里（contextTokens 是最近一次请求的输入量）。 -->
+            <span id="usage-pill" class="usage-pill" hidden aria-label="当前会话 token 用量"></span>
+            <!-- 来源筛选：始终保留入口，但用无边框的小字样式，和模型名同一语言，
+                 不再是一个独立的胶囊按钮 -->
+            <button type="button" id="sources-btn" class="ghost-pill" aria-haspopup="menu" aria-expanded="false">
+              <span id="sources-label">全部来源</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <button type="button" id="model-btn" class="model-btn" title="切换模型" aria-haspopup="menu" aria-expanded="false">
+              <span id="model-btn-label">未配置模型</span>
+            </button>
+            <!-- 发送键只留一个箭头；快捷键放进 title 和 aria-label，不再往小圆里塞键帽 -->
+            <button type="submit" id="send" class="send-circle" title="发送（⌘/Ctrl + Enter）" aria-label="发送">
+              <svg class="send-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+              <svg class="stop-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            </button>
+          </div>
+          <div id="add-menu" class="menu add-menu hidden" role="menu" aria-label="上传与技能"></div>
+          <div id="model-menu" class="menu model-menu hidden" role="menu" aria-label="切换模型"></div>
+          <input id="file-input" type="file" multiple hidden>
+          <!-- 拖到输入框上时盖住整块输入框（逻辑见 src/attachments.js） -->
+          <div id="composer-drop" class="composer-drop">
+            <span class="composer-drop-icon">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5 12 20a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17.7a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg>
+            </span>
+            <b>添加文件</b>
+            <span>松手就加入这一轮对话</span>
+          </div>
+        </form>
+        <div class="chat-foot">AI 也会出错，重要信息请核实。</div>
+      </div>
+
+      <div id="sources-menu" class="menu hidden" role="menu">
+        <button type="button" data-src="全部来源" role="menuitem">全部来源<span class="tick">✓</span></button>
+        <button type="button" data-src="仅会话上下文" role="menuitem">仅会话上下文</button>
+        <button type="button" data-src="仅编译产物" role="menuitem">仅编译产物</button>
+      </div>
+    </aside>
+
+    <button id="chat-fab" class="chat-fab" title="展开 AI 助手" aria-label="展开 AI 助手">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
+    </button>
+  </main>
+</div>
+
+<!-- 设置页：铺满整个窗口，左边标签栏，右边对应内容 -->
+<section id="settings-page" class="settings-page" hidden aria-label="设置">
+  <header class="settings-top">
+    <span class="brand"><svg class="brand-mark" data-blob-logo width="34" height="34" aria-hidden="true"></svg><span class="brand-name">wuch-ai</span></span>
+    <i class="settings-sep">›</i>
+    <span class="settings-title">设置</span>
+    <div class="grow"></div>
+    <button id="close-settings" class="icon-btn" title="关闭设置（Esc）" aria-label="关闭设置">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </header>
+  <div class="settings-main">
+    <nav id="settings-tabs" class="settings-tabs" role="tablist" aria-orientation="vertical">
+      <button type="button" role="tab" data-stab="model" class="active">模型配置</button>
+      <button type="button" role="tab" data-stab="prefs">用户喜好配置</button>
+      <button type="button" role="tab" data-stab="db">数据库接口列表</button>
+      <button type="button" role="tab" data-stab="tools">工具</button>
+      <button type="button" role="tab" data-stab="kb">知识库</button>
+      <button type="button" role="tab" data-stab="skills">Skill 列表<span class="soon">未接入</span></button>
+    </nav>
+    <div class="settings-body">
+      <section class="settings-pane" data-spane="model" role="tabpanel">
+        <header class="settings-head">
+          <h2>模型配置</h2>
+          <p class="settings-desc">一行一个模型：接口地址 + Key + 模型名。可以接多个、可以改名，当前用哪一个在输入框右下角随时切换。</p>
+        </header>
+        <div class="settings-toolbar">
+          <input id="model-search" class="set-input" placeholder="搜索模型" spellcheck="false">
+          <button id="model-add" class="set-btn primary" type="button">添加模型</button>
+        </div>
+        <div id="model-list" class="model-list"></div>
+        <p class="settings-hint">关掉开关的模型不会出现在输入框的切换列表里。</p>
+      </section>
+
+      <section class="settings-pane" data-spane="prefs" role="tabpanel" hidden data-cols="2">
+        <header class="settings-head">
+          <h2>用户喜好配置</h2>
+          <p class="settings-desc">影响界面怎么出图、会话怎么保存。改完立即生效，不需要保存。</p>
+        </header>
+
+        <section class="set-section">
+          <div class="set-sec-head">
+            <h3>界面与会话</h3>
+            <p>打开页面时看到什么。</p>
+          </div>
+          <div class="set-card">
+            <div class="set-row">
+              <div class="set-row-main">
+                <div class="set-label">
+                  图片走在线解析
+                  <button type="button" class="set-help" aria-label="说明" data-tip="关掉后不再请求外部图源，示意图改用本地占位图，离线也能看。">?</button>
+                </div>
+                <div class="set-desc">关掉就用本地占位图代替。</div>
+              </div>
+              <label class="switch"><input id="s-onlineImages" type="checkbox"><i></i></label>
+            </div>
+            <div class="set-row">
+              <div class="set-row-main">
+                <div class="set-label">打开页面时回到上次的会话</div>
+                <div class="set-desc">关掉则每次都是新会话。</div>
+              </div>
+              <label class="switch"><input id="s-restoreLast" type="checkbox"><i></i></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="set-section">
+          <div class="set-sec-head">
+            <h3>上下文压缩</h3>
+            <p id="compress-stat">—</p>
+          </div>
+          <div class="set-card">
+            <div class="set-row">
+              <div class="set-row-main">
+                <div class="set-label">
+                  快满时自动压缩
+                  <button type="button" class="set-help" aria-label="说明" data-tip="超过阈值就把更早的轮次压成要点，最近几轮始终保留原文；压缩那一轮的前缀会变，缓存必然全 miss。">?</button>
+                </div>
+                <div class="set-desc">把早前的轮次压成要点再发送。</div>
+              </div>
+              <label class="switch"><input id="s-compress" type="checkbox"><i></i></label>
+            </div>
+            <div class="set-row stack">
+              <div class="set-row-main">
+                <div class="set-label">触发阈值 <b id="compress-at-label" class="set-value">80%</b></div>
+                <input id="s-compressAt" class="set-range" type="range" min="50" max="95" step="5" aria-label="上下文压缩触发阈值">
+              </div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-main">
+                <div class="set-desc">只压当前会话，下一轮发送时生效。</div>
+              </div>
+              <button id="compress-now" class="set-btn" type="button">立即压缩</button>
+            </div>
+            <details class="set-more">
+              <summary>为什么建议晚一点再压</summary>
+              <p>压缩会改写这一轮的请求前缀，服务端缓存必然全部失效，下一次请求要重新算一遍。所以阈值宁可设高一些、一次压够，而不是每轮都压一点。</p>
+            </details>
+          </div>
+        </section>
+
+        <section class="set-section">
+          <div class="set-sec-head">
+            <h3>历史会话</h3>
+            <p id="history-stat">—</p>
+          </div>
+          <div class="set-card">
+            <div class="set-row">
+              <div class="set-row-main">
+                <div class="set-label">清空本地历史</div>
+                <div class="set-desc">只删这台机器上的会话记录，不能撤销。</div>
+              </div>
+              <button id="clear-history" class="set-btn danger" type="button">清空</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="set-section">
+          <div class="set-sec-head">
+            <h3>跨会话记忆</h3>
+            <p>从对话里提炼原子事实与偏好，不保存原文。排除的会话不进记忆与画像。</p>
+          </div>
+          <div class="set-card">
+            <div class="set-row">
+              <div class="set-row-main">
+                <div class="set-label">启用记忆</div>
+                <div class="set-desc">开新会话时沿用之前提炼的偏好。</div>
+              </div>
+              <label class="switch"><input id="s-memoryEnabled" type="checkbox"><i></i></label>
+            </div>
+            <div class="set-row">
+              <div class="set-row-main">
+                <div class="set-label">计入用户画像</div>
+                <div class="set-desc">关掉后只保存条目，不影响画像。</div>
+              </div>
+              <label class="switch"><input id="s-memoryProfile" type="checkbox"><i></i></label>
+            </div>
+            <div class="set-row stack">
+              <div class="set-row-main">
+                <div class="set-label">置信度门槛 <b id="s-memoryThreshold-val" class="set-value">0.5</b></div>
+                <input id="s-memoryThreshold" class="set-range" type="range" min="0" max="100" step="5" value="50" aria-label="记忆置信度门槛">
+                <div class="set-desc">低于门槛的条目留在候选池，不进画像。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="set-section">
+          <div class="set-sec-head">
+            <h3>记忆条目</h3>
+            <p id="memory-stat">—</p>
+          </div>
+          <div id="memory-list" class="memory-list"></div>
+          <div class="set-actions">
+            <button id="memory-refresh" class="set-btn" type="button">刷新列表</button>
+            <button id="clear-profile" class="set-btn danger" type="button">清空画像</button>
+          </div>
+        </section>
+
+        <section class="set-section">
+          <div class="set-sec-head">
+            <h3>会话排除</h3>
+            <p>勾选后该会话的证据会从记忆里撤掉。</p>
+          </div>
+          <div id="memory-excl" class="memory-excl"></div>
+        </section>
+      </section>
+
+      <section class="settings-pane" data-spane="db" role="tabpanel" hidden>
+        <header class="settings-head">
+          <h2>数据库接口列表</h2>
+          <p class="settings-desc">本地 SQLite 上的接口，列表由服务端路由表生成。点一行展开调试；标「会改数据」的接口发送前会再确认。</p>
+        </header>
+        <div id="api-console" class="api-console"></div>
+      </section>
+
+      <section class="settings-pane" data-spane="tools" role="tabpanel" hidden>
+        <header class="settings-head">
+          <h2>工具</h2>
+          <p class="settings-desc">给模型的联网能力。都只读：不加载 CSS / JS / 图片，也不执行脚本。</p>
+        </header>
+        <div id="tool-list" class="model-list"></div>
+        <div id="tool-key"></div>
+        <p class="settings-hint">没填 Tavily Key 时搜索走免费通道，时效查询够用但不保证稳定。填了之后搜索和读网页都走 Tavily。</p>
+      </section>
+
+      <section class="settings-pane" data-spane="kb" role="tabpanel" hidden>
+        <header class="settings-head">
+          <h2>知识库</h2>
+          <p class="settings-desc">只在对话中产生：上传文件 → AI 阅读后蒸馏成 AOCI 条目入库。这里只读，没有上传入口。</p>
+        </header>
+        <div class="settings-toolbar">
+          <input id="kb-search" class="set-input" placeholder="搜索名字 / 一句话 / 标签" spellcheck="false">
+          <label class="chk"><input id="kb-showArchived" type="checkbox"><span>含已归档</span></label>
+          <button id="kb-refresh" class="set-btn" type="button">刷新</button>
+        </div>
+        <div id="kb-stat" class="settings-hint">—</div>
+        <div id="kb-list" class="kb-list"></div>
+      </section>
+
+      <section class="settings-pane" data-spane="skills" role="tabpanel" hidden>
+        <header class="settings-head">
+          <h2>Skill 列表</h2>
+          <p class="settings-desc">给模型挂上可复用的能力。</p>
+        </header>
+        <div class="settings-empty">
+          <b>还没有可用的 Skill</b>
+          <span>这个功能还在做，接入后会在这里列出每个 Skill 和它的开关。</span>
+          <button class="mini" type="button" disabled>添加 Skill</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<iframe id="runner" title="沙箱运行时宿主" hidden></iframe>
+<div id="toast"></div>
+<script type="module" src="src/chat.js"></script>
+</body>
+</html>

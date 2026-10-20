@@ -1,0 +1,18 @@
+{
+  "name": "@openui-lab/server",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "description": "Bun 服务端：静态文件路由表 + 上游转发（含 SSE 透传与 CORS 补头）+ 会话接口（本地 SQLite）",
+  "scripts": {
+    "dev": "bun index.mjs",
+    "mock": "bun mock.mjs",
+    "test": "bun test tests"
+  },
+  "dependencies": {
+    "@openui-lab/fixtures": "workspace:*",
+    "@openui-lab/runtime": "workspace:*",
+    "pdfjs-dist": "^6.4.299",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@openui-lab/protocol",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "description": "操作协议：varint 二进制编解码 + 独立字符串表 + hex dump。双端共享（worker 编码 / 宿主解码）",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}

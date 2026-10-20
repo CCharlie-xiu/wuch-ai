@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>wuch-ai · 说一句，界面自己长出来</title>
+<meta name="description" content="wuch-ai：用自然语言生成可交互界面。滑块、勾选就地改；会话与知识库留在你这边。在线试用 wuch-ai.net。">
+<style>
+  :root {
+    --shell: #fafbfc;
+    --border: #e6e8eb;
+    --text: #17191d;
+    --muted: #4c525b;
+    --subtle: #646b75;
+    --accent: #223d36;
+    --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --serif: "Songti SC", "Noto Serif SC", serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--shell); color: var(--text); font-family: var(--font); }
+  a { color: #2b5548; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px 72px; }
+  header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+  .brand { font-family: var(--serif); font-size: 22px; }
+  .brand span { color: var(--subtle); font-family: var(--font); font-size: 12px; margin-left: 10px; letter-spacing: .08em; }
+  nav { display: flex; gap: 16px; font-size: 13px; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: 32px; line-height: 1.35; margin: 0 0 10px; }
+  .lead { color: var(--muted); font-size: 16px; line-height: 1.65; max-width: 36em; margin: 0 0 20px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 14px; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  h2 { font-size: 15px; font-weight: 600; margin: 28px 0 8px; }
+  .note { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0 0 10px; max-width: 40em; }
+  figure { margin: 0 0 8px; }
+  figure img { width: 100%; border: 1px solid var(--border); border-radius: 12px; display: block; background: #fff; }
+  .steps { color: var(--muted); font-size: 14px; line-height: 1.7; padding-left: 1.2em; }
+  footer { margin-top: 36px; color: var(--subtle); font-size: 13px; }
+  .pill { display: inline-block; font-size: 12px; color: var(--accent); background: rgba(34,61,54,.08); padding: 4px 10px; border-radius: 999px; margin-bottom: 14px; letter-spacing: .02em; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">wuch-ai<span>LIVE</span></div>
+      <nav>
+        <a href="https://wuch-ai.net">在线试用</a>
+        <a href="https://github.com/CCharlie-xiu/wuch-ai">仓库</a>
+        <a href="https://github.com/CCharlie-xiu/wuch-ai/blob/main/LICENSE">MIT</a>
+      </nav>
+    </header>
+    <p class="pill">在线可用 · wuch-ai.net</p>
+    <h1>说一句你想要的，界面在画布上长出来</h1>
+    <p class="lead">不用拖控件、不用写前端。右侧说一句，左侧边写边渲染；滑块、勾选和选项就地改，不另调模型。会话、记忆和知识库留在你这边。</p>
+    <div class="row">
+      <a class="btn" href="https://wuch-ai.net">打开在线版</a>
+      <a class="btn ghost" href="https://wuch-ai.net/demos.html">先看演示回放</a>
+      <a class="btn ghost" href="https://github.com/CCharlie-xiu/wuch-ai">查看仓库</a>
+    </div>
+
+    <h2>登录</h2>
+    <p class="note">独立登录页，注册或登录后再进画布；可留多个账号随时切换。</p>
+    <figure><img src="images/login.jpg" alt="登录页"></figure>
+
+    <h2>主界面</h2>
+    <p class="note">左画布、右对话。右侧说一句，左侧边写边渲染；顶栏可看原文、编译产物、诊断。</p>
+    <figure><img src="images/canvas.jpg" alt="主界面"></figure>
+
+    <h2>产品分析仪表盘</h2>
+    <p class="note">一句「做产品分析仪表盘」就能长出指标、趋势图和结论卡，对话里继续改。</p>
+    <figure><img src="images/dashboard.jpg" alt="产品分析仪表盘"></figure>
+
+    <h2>地图与干线</h2>
+    <p class="note">演示回放里不连模型也能看：门店标注、干线、区域高亮，链路与正式聊天相同。</p>
+    <figure><img src="images/map.jpg" alt="全国门店与干线地图"></figure>
+
+    <h2>表格与 Excel</h2>
+    <p class="note">可编辑的销售明细，支持导入自己的表格，再让对话做达标与预算分析。</p>
+    <figure><img src="images/excel.jpg" alt="区域销售表与分析"></figure>
+
+    <h2>怎么开始</h2>
+    <ol class="steps">
+      <li>打开 <a href="https://wuch-ai.net">https://wuch-ai.net</a>，注册一个账号</li>
+      <li>设置里填 OpenAI 兼容的接口地址与 Key</li>
+      <li>想先看效果、不连模型：打开 <a href="https://wuch-ai.net/demos.html">演示回放</a></li>
+      <li>本地开发：<code>bun install</code> → <code>bun run dev</code>（详见仓库 README）</li>
+    </ol>
+    <footer>MIT · 在线版跑在 Cloudflare Workers · 完整能力也可本机自托管</footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "@openui-lab/web",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "description": "静态前端：聊天页、演示回放页、渲染器、检视器。无构建步骤，靠 import map 解析 @openui-lab/*",
+  "exports": {
+    "./model.js": "./src/model.js",
+    "./renderer.js": "./src/renderer.js"
+  },
+  "dependencies": {
+    "@openui-lab/catalog": "workspace:*",
+    "@openui-lab/compiler": "workspace:*",
+    "@openui-lab/fixtures": "workspace:*",
+    "@openui-lab/protocol": "workspace:*",
+    "lxgw-wenkai-screen-webfont": "^1.7.0"
+  }
+}

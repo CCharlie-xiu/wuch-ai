@@ -1,0 +1,10 @@
+{
+  "name": "@openui-lab/fixtures",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "description": "预置 DIL 与跟随数据。双端共享：服务端假上游（mock）与前端演示页都要用",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}

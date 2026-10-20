@@ -1,0 +1,8 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   界面字体：霞鹜文楷 Screen 简体版（LXGW WenKai GB Screen），中英文都由它出字，本地托管。
+   Screen 版笔画加粗过，小字号也清楚。代码走系统等宽字体（app.css 的 --mono）。
+   文件由服务端从 lxgw-wenkai-screen-webfont 映射到 /vendor/fonts/（见 apps/server/index.mjs）。
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* 包自带的按字符切片声明（font-family: 'LXGW WenKai Screen'），页面用到哪些字才下载哪几片 */
+@import url("/vendor/fonts/lxgw-wenkai/lxgwwenkaigbscreen.css");

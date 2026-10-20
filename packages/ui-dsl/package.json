@@ -1,0 +1,21 @@
+{
+  "name": "@openui-lab/ui-dsl",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "description": "Function-style UI DSL v1：词法/语法解析、两阶段引用解析、静态校验、规范化 AST。只解析，不执行、不渲染",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openui-lab/catalog": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "typescript": "^7.0.2"
+  }
+}

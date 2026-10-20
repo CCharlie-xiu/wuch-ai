@@ -1,0 +1,47 @@
+---
+description: 后端规范（apps/server）：数据库迁移的校验和与幂等写法、数据访问与接口分层
+globs: apps/server/**
+alwaysApply: false
+---
+
+# 后端规范
+
+## 数据库迁移（强制）
+
+执行器是 `apps/server/src/migrate.mjs`，启动时自动跑；违反下面任一条，服务拒绝启动。
+
+**校验和**
+- 每个已应用的迁移都在 `schema_version` 里登记了 `name` + `sha256`。启动时逐个比对：文件被改（含注释、空白）或被删，直接报错。
+- **已应用的迁移文件一个字节都不许改。** 要改表结构，新增一个迁移文件。
+- 版本 1 是 `data/schema.sql`；之后放 `data/migrations/NNN_snake_case.sql|.mjs`，版本号三位起、递增、不重复。
+
+**幂等**：同一个迁移重跑一遍，结果不变、不报错。`.sql` 文件执行前会做静态检查：
+
+| 要写 | 不要写 |
+|---|---|
+| `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`（VIEW、TRIGGER 同理） | 不带 `IF NOT EXISTS` 的 `CREATE` |
+| `DROP TABLE IF EXISTS` | 不带 `IF EXISTS` 的 `DROP` |
+| `INSERT OR IGNORE` / `INSERT ... ON CONFLICT DO ...` | 裸 `INSERT` |
+| `UPDATE ... WHERE <只命中还没改过的行>` | 重跑会叠加效果的 `UPDATE`（如 `SET n = n + 1`） |
+
+- `ALTER TABLE` 在 SQLite 里写不成幂等，`.sql` 里禁止；改用 `.mjs` 迁移：
+
+```js
+// data/migrations/002_conversation_pinned.mjs
+export default function up(db, h) {
+  h.addColumn('conversation', 'pinned', 'INTEGER NOT NULL DEFAULT 0'); // 列已存在就跳过
+  h.exec('CREATE INDEX IF NOT EXISTS idx_conversation_pinned ON conversation (pinned)');
+}
+```
+
+- `.mjs` 的 `up` 必须是同步函数（和版本登记同一个事务）；可用 `h.hasTable` / `h.hasColumn` / `h.addColumn` / `h.renameColumn` / `h.exec`（同样过幂等检查）。
+- 迁移文件里不写 `PRAGMA` / `BEGIN` / `COMMIT`：每个迁移由执行器包成一个事务，失败整体回滚、不登记。
+- 新增或修改迁移规则时，同步补 `apps/server/tests/migrate.test.mjs`。
+
+## 分层
+
+- SQL 只出现在 `src/db.mjs` 的 repo 和迁移文件里；`src/api.mjs` 只做路由、参数解析和状态码，通过 repo 读写。
+- 业务校验错误抛 `RepoError(status, 中文信息)`，由 api 层转成 `{ error }` JSON。
+- 时间一律 Unix 毫秒整数；JSON 存 TEXT 列，读出时解析。
+- 删除用软删除（`deleted_at`），列表与读取默认过滤。
+- 接口改动同步补 `apps/server/tests/conversations.test.mjs`；跑 `bun run test:server`。

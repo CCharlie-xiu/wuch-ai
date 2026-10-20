@@ -1,0 +1,10 @@
+{
+  "name": "@openui-lab/runtime",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "description": "沙箱运行时源码 —— 注意：这是资产不是模块。被 fetch 成文本、包进 Blob Worker 执行，禁止进入任何打包器（见 DESIGN.md §1.4）",
+  "exports": {
+    "./worker-runtime.js": "./src/worker-runtime.js"
+  }
+}

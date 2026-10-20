@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>wuch-ai · 登录</title>
+<meta name="description" content="wuch-ai · OpenUI Lab —— 边写边渲染的界面画布。">
+<link rel="preload" href="/vendor/fonts/lxgw-wenkai/files/lxgwwenkaigbscreen-subset-119.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-shell">
+  <header class="auth-top">
+    <a class="auth-brand" href="/login" aria-label="wuch-ai 登录页">
+      <svg class="auth-brand-mark" data-blob-logo width="30" height="30" aria-hidden="true"></svg>
+      <span class="auth-brand-name">wuch-ai</span>
+    </a>
+    <span class="auth-top-sep" aria-hidden="true">/</span>
+    <span class="auth-top-meta">OPENUI LAB</span>
+    <div class="grow"></div>
+    <span class="auth-clock" id="auth-clock" aria-label="当前时间">--:--</span>
+  </header>
+
+  <main class="auth-grid">
+    <!-- 左：竖排宣言（窄屏隐藏，文案在舞台下方仍可见） -->
+    <aside class="auth-rail auth-rail-left" aria-hidden="true">
+      <span class="rail-index">01</span>
+      <span class="rail-rule"></span>
+      <div class="rail-body">
+        <p class="rail-vert">界面会自己生长</p>
+        <span class="rail-cap">MANIFESTO</span>
+      </div>
+    </aside>
+
+    <!-- 中：logo + 品牌名，竖着排列 -->
+    <section class="auth-stage">
+      <div class="stage-center">
+        <svg class="stage-logo" data-blob-logo width="78" height="78" aria-hidden="true"></svg>
+        <h1 class="stage-wordmark">wuch-ai<sup class="stage-reg">®</sup></h1>
+        <p class="stage-sub">OpenUI Lab · 边写边渲染的界面画布</p>
+        <p class="stage-line">说一句你想要的，界面在画布上长出来。</p>
+        <button class="stage-cta" id="stage-cta" type="button">
+          <span>开始</span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M6 14l6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="stage-foot">
+        <span>不是模板，是现场生成的界面</span>
+        <span class="stage-foot-dot" aria-hidden="true"></span>
+        <span>SHANGHAI × EVERYWHERE</span>
+      </div>
+    </section>
+
+    <!-- 右：登录 / 注册。和左边同处一个网格，不是盖在上面的浮层 -->
+    <aside class="auth-rail auth-rail-right" id="access">
+      <div class="access-head">
+        <span class="rail-index">02</span>
+        <span class="rail-rule"></span>
+        <span class="rail-cap">ACCESS</span>
+      </div>
+
+      <p class="access-add" id="access-add" hidden>
+        正在添加账号 · 登录后可随时切换
+      </p>
+
+      <div class="auth-card">
+        <div class="auth-tabs" role="tablist" aria-label="登录或注册">
+          <button type="button" role="tab" data-mode="signin" class="active" aria-selected="true">登录</button>
+          <button type="button" role="tab" data-mode="signup" aria-selected="false">注册</button>
+        </div>
+
+        <p class="auth-lead" id="auth-lead">用邮箱登录；每位用户的会话与配置互不打通。</p>
+
+        <div class="auth-recent" id="auth-recent" hidden>
+          <span class="auth-recent-label">继续使用</span>
+          <div class="auth-recent-list" id="auth-recent-list"></div>
+        </div>
+
+        <form class="auth-form" id="auth-form" novalidate>
+          <label class="auth-field" data-only="signup" hidden>
+            <span class="af-label">你的名字</span>
+            <input id="auth-name" type="text" autocomplete="nickname" placeholder="怎么称呼你" spellcheck="false">
+          </label>
+
+          <label class="auth-field">
+            <span class="af-label">邮箱</span>
+            <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" spellcheck="false" required>
+          </label>
+
+          <label class="auth-field">
+            <span class="af-label">密码</span>
+            <span class="af-pass">
+              <input id="auth-password" type="password" autocomplete="current-password" placeholder="至少 6 位" required>
+              <button type="button" class="af-peek" id="auth-peek" aria-label="显示密码">显示</button>
+            </span>
+          </label>
+
+          <p class="auth-err" id="auth-err" role="alert" hidden></p>
+
+          <button class="auth-submit" id="auth-submit" type="submit">
+            <span id="auth-submit-label">登录</span>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+
+        <p class="auth-fine">
+          小范围试用：邮箱注册后，会话 / 模型 / 记忆 / 知识库按账号隔离。密码至少 6 位。
+        </p>
+      </div>
+
+      <div class="access-note">
+        <p class="access-note-k">按账号隔离</p>
+        <p class="access-note-v">登录态保存在本机；业务数据在服务端按账号分开，互不可见。</p>
+      </div>
+
+      <p class="access-foot">
+        <a id="access-back" href="index.html">返回画布</a>
+        <span class="access-sep" aria-hidden="true">·</span>
+        <a href="demos.html">演示回放</a>
+      </p>
+    </aside>
+  </main>
+
+  <footer class="auth-foot">
+    <span>WUCH-AI / HELLO@WUCH.AI</span>
+    <div class="grow"></div>
+    <nav class="auth-foot-links" aria-label="其他入口">
+      <a href="https://github.com" target="_blank" rel="noopener">GITHUB</a>
+      <a href="#access" data-focus-auth>微信</a>
+      <a href="#access" data-focus-auth>邮箱</a>
+    </nav>
+  </footer>
+</div>
+
+<div id="toast"></div>
+<script type="module" src="src/login-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "@openui-lab/compiler",
+  "private": true,
+  "type": "module",
+  "version": "0.4.0",
+  "description": "OpenUI Lang 编译：宽容分析结果 → JS 程序 + JSON 文档（常量表、稳定 key、服务端解析请求、fallbackMarkdown）",
+  "exports": {
+    "./compile.js": "./src/compile.js"
+  },
+  "dependencies": {
+    "@openui-lab/catalog": "workspace:*",
+    "@openui-lab/ui-dsl": "workspace:*"
+  }
+}

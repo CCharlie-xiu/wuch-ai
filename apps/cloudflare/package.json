@@ -1,0 +1,21 @@
+{
+  "name": "@openui-lab/cloudflare",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Cloudflare Workers + D1：完整前端静态资源 + 鉴权 / 会话 / 模型 / 代理",
+  "scripts": {
+    "dev": "bun run stage && wrangler dev",
+    "stage": "bun scripts/stage-app.mjs",
+    "deploy": "bun run stage && wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply openui-lab --local",
+    "db:migrate:remote": "wrangler d1 migrations apply openui-lab --remote",
+    "sync:public": "node scripts/sync-public.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.45.0"
+  },
+  "dependencies": {
+    "unpdf": "^1.9.1"
+  }
+}

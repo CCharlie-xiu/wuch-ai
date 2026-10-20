@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline' blob: 'unsafe-eval'; worker-src blob:; style-src 'unsafe-inline'; img-src data: blob:">
+<title>openui runner</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b0b0f;color:#7a7a8c;font:12px ui-monospace,SFMono-Regular,Menlo,monospace}
+  #log{padding:10px;white-space:pre-wrap;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="log">runner.html 已加载。宿主会把运行时源码交进来，这里再起一个 Web Worker。</div>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// 沙箱宿主（runner.html）
+//
+// 这一层存在的唯一理由是「让程序离宿主页面足够远」：
+//   · iframe sandbox="allow-scripts" —— 不透明源，拿不到父页面的 DOM、存储、cookie
+//   · CSP default-src 'none'        —— 自己一个字节也拉不到网
+//   · 程序不在这个文档里跑，而在由 blob: 起出来的 Web Worker 里跑
+//   · 看门狗在 Worker 外面（Worker 里已经没有计时器了）：超时就隔离并重启
+// ─────────────────────────────────────────────────────────────────────────────
+(function () {
+  var parentWin = window.parent;
+  var worker = null;
+  var watchdog = null;
+  var pending = null;
+  var quarantines = 0;
+  var backlog = [];
+  var logEl = document.getElementById('log');
+  var TIMEOUT = 2000;
+
+  function say(text) {
+    logEl.textContent = text;
+  }
+  function send(msg) {
+    try {
+      parentWin.postMessage(msg, '*');
+    } catch (e) {
+      /* 不透明源下 postMessage 到父窗口是允许的，失败就算了 */
+    }
+  }
+
+  function startWorker(source) {
+    var bootstrap = source + '\nself.__OPENUI_WORKER__();\n';
+    var url = URL.createObjectURL(new Blob([bootstrap], { type: 'text/javascript' }));
+    worker = new Worker(url);
+    URL.revokeObjectURL(url);
+    worker.onmessage = function (e) {
+      var msg = e.data || {};
+      clearWatchdog();
+      if (msg.type === 'ready') {
+        say('运行时已启动。\n' +
+            '已移除：' + (msg.locked.removed.length) + ' 个全局能力\n' +
+            msg.locked.removed.join(', ') + '\n' +
+            '已冻结：' + msg.locked.frozen.join(', '));
+      }
+      send(msg);
+    };
+    worker.onerror = function (e) {
+      clearWatchdog();
+      send({ type: 'error', kind: 'worker', message: e.message || 'worker 内部错误' });
+    };
+  }
+
+  function clearWatchdog() {
+    if (watchdog) {
+      clearTimeout(watchdog);
+      watchdog = null;
+      pending = null;
+    }
+  }
+
+  function armWatchdog() {
+    clearWatchdog();
+    pending = { at: Date.now() };
+    watchdog = setTimeout(function () {
+      // 程序没在时限内回应 → 隔离，重启 Worker
+      quarantines++;
+      var old = worker;
+      worker = null;
+      try { old.terminate(); } catch (e) {}
+      send({ type: 'quarantined', count: quarantines, timeout: TIMEOUT });
+      startWorker(window.__SOURCE__);
+    }, TIMEOUT);
+  }
+
+  window.addEventListener('message', function (event) {
+    var msg = event.data || {};
+    if (msg.type === 'init') {
+      window.__SOURCE__ = msg.source;
+      say('收到运行时源码 ' + msg.source.length + ' 字节，正在启动 Web Worker…');
+      startWorker(msg.source);
+      if (backlog.length) {
+        var queued = backlog.splice(0);
+        for (var i = 0; i < queued.length; i++) worker.postMessage(queued[i]);
+      }
+      return;
+    }
+    if (!worker) {
+      // Worker 还没起来：先排队，别把宿主的第一帧丢掉
+      backlog.push(msg);
+      return;
+    }
+    if (msg.type === 'program') armWatchdog();
+    worker.postMessage(msg);
+  });
+
+  send({ type: 'runner-ready' });
+})();
+</script>
+</body>
+</html>

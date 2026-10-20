@@ -1,0 +1,8 @@
+# Bun 工作区配置
+#
+# linker = "isolated"：拒绝幽灵依赖。
+# apps/web 若未在 package.json 里声明某个包，它就 import 不到 ——
+# 模块边界由链接器强制，而不是靠自觉。见 DESIGN.md §2.1。
+
+[install]
+linker = "isolated"

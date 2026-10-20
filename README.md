@@ -1,5 +1,9 @@
 # wuch-ai
 
+<p align="center">
+  <img src="docs/images/logo.png" alt="wuch-ai logo" width="560">
+</p>
+
 [![Live](https://img.shields.io/badge/live-wuch--ai.net-223d36?style=flat-square)](https://wuch-ai.net)
 [![Demo](https://img.shields.io/badge/demo-demos.html-646b75?style=flat-square)](https://wuch-ai.net/demos.html)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)

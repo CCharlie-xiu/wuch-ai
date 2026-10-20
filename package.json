@@ -4,6 +4,24 @@
   "type": "module",
   "version": "0.3.0",
   "description": "说一句，界面在画布上长出来。https://wuch-ai.net",
+  "homepage": "https://wuch-ai.net",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CCharlie-xiu/wuch-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CCharlie-xiu/wuch-ai/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "wuch-ai",
+    "generative-ui",
+    "conversational-ui",
+    "llm",
+    "canvas",
+    "cloudflare-workers",
+    "bun"
+  ],
   "workspaces": [
     "apps/*",
     "packages/*"

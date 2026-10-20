@@ -1,12 +1,25 @@
 # wuch-ai
 
+[![Live](https://img.shields.io/badge/live-wuch--ai.net-223d36?style=flat-square)](https://wuch-ai.net)
+[![Demo](https://img.shields.io/badge/demo-demos.html-646b75?style=flat-square)](https://wuch-ai.net/demos.html)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Bun](https://img.shields.io/badge/runtime-Bun-fbf0df?style=flat-square)](https://bun.sh)
+[![Cloudflare Workers](https://img.shields.io/badge/deploy-Cloudflare%20Workers-f38020?style=flat-square)](apps/cloudflare/README.md)
+
 **说一句你想要的，界面在画布上长出来。**
 
 不用拖控件、不用写前端。右侧对话一句，左侧画布边写边渲染；滑块、勾选和选项就地改，不另调模型。会话、记忆和知识库留在你这边。
 
-**在线试用 → [https://wuch-ai.net](https://wuch-ai.net)** · [演示回放](https://wuch-ai.net/demos.html)（不连模型也能看）
+**在线试用 → [https://wuch-ai.net](https://wuch-ai.net)** · [演示回放](https://wuch-ai.net/demos.html)（不连模型也能看） · [介绍页](docs/index.html)
 
-[MIT](LICENSE) · 本地需 [Bun](https://bun.sh) · 线上跑在 Cloudflare Workers
+## 为什么是 wuch-ai
+
+| 你得到的 | 含义 |
+|---|---|
+| 自然语言 → 可交互界面 | 说「做 Q3 销售页」，左侧长出图表、表格、控件 |
+| 就地改，不另调模型 | 滑块、勾选、选项直接动；下一轮再说下一句 |
+| 账号隔离的云端试用 | 注册即用，会话 / 记忆 / 知识库按账号分开 |
+| 可自托管 | 本机 `bun run dev`，或部署到自己的 Workers |
 
 ## 长什么样
 
@@ -67,3 +80,10 @@ bun run mock         # 可选：没 Key 时用假上游 http://127.0.0.1:8789/v1
 - 顶栏检视器看更新、诊断与操作  
 
 更细的设计与实现说明在 `DESIGN.md`、`DESIGN-KB.md`、`docs/`，用的时候不必先读。
+
+## 链接
+
+- 产品：[https://wuch-ai.net](https://wuch-ai.net)
+- 演示：[https://wuch-ai.net/demos.html](https://wuch-ai.net/demos.html)
+- 仓库：[https://github.com/CCharlie-xiu/wuch-ai](https://github.com/CCharlie-xiu/wuch-ai)
+- 许可：[MIT](LICENSE)

@@ -1,5 +1,7 @@
 # wuch-ai
 
+**中文** | [English](README.en.md)
+
 <p align="center">
   <img src="docs/images/logo.png" alt="wuch-ai logo" width="560">
 </p>
@@ -14,12 +16,10 @@
 
 不用拖控件、不用写前端。右侧对话一句，左侧画布边写边渲染；滑块、勾选和选项就地改，不另调模型。会话、记忆和知识库留在你这边。
 
-> **English.** wuch-ai turns a natural-language request into a live, interactive UI on a canvas—charts, tables, forms, maps—without writing frontend code. Controls update in place (no extra model round-trip). Sessions, memory, and knowledge stay on your side (local SQLite or your own Cloudflare D1). Bring any OpenAI-compatible endpoint, or try the hosted app at [wuch-ai.net](https://wuch-ai.net). Replay demos without a model key via [`/demos.html`](https://wuch-ai.net/demos.html).
-
 **在线试用 → [https://wuch-ai.net](https://wuch-ai.net)** · [演示回放](https://wuch-ai.net/demos.html)（不连模型也能看） · [介绍页](docs/index.html)
 
 <p align="center">
-  <img src="docs/images/demo-walkthrough.gif" alt="Login → demos: Excel sales analysis and product dashboard streaming" width="720">
+  <img src="docs/images/demo-walkthrough.gif" alt="登录 → 演示：Excel 销售分析与产品仪表盘流式生成" width="720">
 </p>
 <p align="center"><sub>登录页 → 演示回放：Excel 销售分析 / 产品分析仪表盘（流式边写边渲染，不连真实模型）</sub></p>
 

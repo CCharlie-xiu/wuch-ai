@@ -6,7 +6,7 @@
 
 Please do **not** open a public Issue for security reports.
 
-Email the maintainer address on the GitHub account, or report privately via GitHub Security Advisories:
+Email **chouxiucheng@gmail.com**, or report privately via GitHub Security Advisories:
 
 https://github.com/CCharlie-xiu/wuch-ai/security/advisories/new
 

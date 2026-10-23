@@ -1,54 +1,54 @@
-# 参与贡献
+# Contributing
 
-**中文** | [English](CONTRIBUTING.en.md)
+**English** | [中文](CONTRIBUTING.zh.md)
 
-## 开始
+## Getting started
 
 ```bash
 bun install
-cp .env.example apps/server/.env   # 填 MODEL_KEY_SECRET（≥16 位）
+cp .env.example apps/server/.env   # set MODEL_KEY_SECRET (≥16 chars)
 bun run dev                        # http://127.0.0.1:8788
-bun run mock                       # 没 Key 时的假上游 http://127.0.0.1:8789/v1
+bun run mock                       # optional fake upstream: http://127.0.0.1:8789/v1
 ```
 
-需要 [Bun](https://bun.sh) 1.4+。介绍页本地地址：http://127.0.0.1:8788/intro
+Requires [Bun](https://bun.sh) 1.4+. Intro page locally: http://127.0.0.1:8788/intro
 
-## 目录
+## Layout
 
-| 路径 | 内容 |
+| Path | Contents |
 |---|---|
-| `apps/web` | 前端（画布、对话、设置） |
-| `apps/server` | 本地 Bun 服务 |
-| `apps/cloudflare` | Workers + D1 线上版 |
-| `packages/ui-dsl` | UI DSL 解析与校验 |
-| `packages/catalog` | 组件目录 |
-| `packages/compiler` `runtime` `protocol` | 编译、沙箱运行时、协议 |
-| `docs/` `DESIGN.md` | 设计文档与介绍页源文件 |
+| `apps/web` | Frontend (canvas, chat, settings) |
+| `apps/server` | Local Bun server |
+| `apps/cloudflare` | Workers + D1 hosted app |
+| `packages/ui-dsl` | UI DSL parse & validate |
+| `packages/catalog` | Component catalog |
+| `packages/compiler` `runtime` `protocol` | Compile, sandbox runtime, protocol |
+| `docs/` `DESIGN.md` | Design notes and intro page source |
 
-## 提交前
+## Before you push
 
 ```bash
-bun run test            # 冒烟
+bun run test            # smoke
 bun run test:server
 bun run test:dsl
 bun run test:catalog
 bun run typecheck:dsl
 ```
 
-- 改了哪块就跑哪块；改 `packages/ui-dsl` 必须跑 `test:dsl` 与 `typecheck:dsl`
-- 新行为带测试
+- Run the suites that match what you changed; for `packages/ui-dsl`, always run `test:dsl` and `typecheck:dsl`
+- New behavior should include tests
 
-## 分支与提交
+## Branches & commits
 
-- 从 `main` 切分支：`feat/…`、`fix/…`、`docs/…`
-- 提交信息：`类型(范围): 说明`，类型取 `feat` `fix` `chore` `docs` `refactor` `test`
-- 一个 PR 做一件事，目标分支 `main`
+- Branch from `main`: `feat/…`, `fix/…`, `docs/…`
+- Commit message: `type(scope): summary` — `feat` `fix` `chore` `docs` `refactor` `test`
+- One concern per PR; target `main`
 
-## 不要提交
+## Do not commit
 
-`.env`、`*.db`、API Key、`node_modules`。`.env.example` 只放占位。
+`.env`, `*.db`, API keys, `node_modules`. Keep `.env.example` placeholders only.
 
-## Issue
+## Issues
 
-- Bug 和功能建议用 Issue 模板
-- 安全问题不要开公开 Issue，见 [SECURITY.md](SECURITY.md)（[English](SECURITY.en.md)）
+- Bugs and feature ideas: use the Issue templates
+- Security issues: do not open a public Issue — see [SECURITY.md](SECURITY.md)

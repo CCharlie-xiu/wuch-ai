@@ -1,18 +1,18 @@
-# 安全
+# Security
 
-**中文** | [English](SECURITY.en.md)
+**English** | [中文](SECURITY.zh.md)
 
-## 报告漏洞
+## Reporting a vulnerability
 
-请不要开公开 Issue 报告安全问题。
+Please do **not** open a public Issue for security reports.
 
-发邮件到 **chouxiucheng@gmail.com**，或通过 GitHub Security Advisories 私下报告：
+Email **chouxiucheng@gmail.com**, or report privately via GitHub Security Advisories:
 
 https://github.com/CCharlie-xiu/wuch-ai/security/advisories/new
 
-请尽量包含：影响范围、复现步骤、是否已有公开利用。我们会尽快确认并回复处理计划。
+Include impact, reproduction steps, and whether a public exploit exists if known. We will confirm and reply with a handling plan as soon as we can.
 
-## 范围说明
+## Scope notes
 
-- 线上试用版（wuch-ai.net）按账号隔离；请勿尝试越权访问他人会话或数据。
-- 本地 `bun run dev` 面向本机开发，默认会回传本机保存的模型 Key 给页面，不要把开发端口暴露到公网。
+- The hosted trial (wuch-ai.net) isolates data by account; do not attempt to access other users’ sessions or data.
+- Local `bun run dev` is for single-machine development and returns stored model API keys to the page by design — do not expose the dev port to the public internet.

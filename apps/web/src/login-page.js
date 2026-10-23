@@ -15,6 +15,8 @@ import {
   signIn,
   signUp,
   signInWith,
+  startGithubOAuth,
+  pollOAuthSession,
   switchTo,
   safeNext,
 } from './accounts.js';
@@ -183,12 +185,35 @@ $('#auth-peek').addEventListener('click', () => {
   input.focus();
 });
 
+let githubMode = 'oauth';
+async function detectGithubMode() {
+  try {
+    const r = await fetch('/api/auth/oauth/github/config', { headers: { Accept: 'application/json' } });
+    if (r.ok) {
+      const d = await r.json();
+      githubMode = d && d.enabled ? 'oauth' : 'off';
+    }
+  } catch {
+    githubMode = 'off';
+  }
+  const btn = $('#auth-github');
+  if (btn && githubMode === 'off') btn.hidden = true;
+}
+await detectGithubMode();
+
 for (const b of document.querySelectorAll('.auth-oauth')) {
   b.addEventListener('click', async () => {
     if (busy) return;
     const provider = b.dataset.provider;
     const label = b.querySelector('span');
     const original = label.textContent;
+    if (provider === 'github' && githubMode === 'oauth') {
+      busy = true;
+      b.disabled = true;
+      label.textContent = '正在跳转 GitHub…';
+      startGithubOAuth(nextTarget());
+      return;
+    }
     label.textContent = provider === 'wechat' ? '正在唤起微信…' : '正在跳转 GitHub…';
     b.disabled = true;
     setBusy(true);
@@ -202,6 +227,55 @@ for (const b of document.querySelectorAll('.auth-oauth')) {
       setBusy(false);
     }
   });
+}
+
+/** GitHub 回调：/login?oauth=github&state=… 轮询取 token */
+async function resumeGithubOAuth() {
+  const q = params();
+  if (q.get('oauth') !== 'github') return false;
+  const err = q.get('error');
+  if (err) {
+    showError(err);
+    const u = new URL(location.href);
+    u.searchParams.delete('oauth');
+    u.searchParams.delete('error');
+    u.searchParams.delete('state');
+    history.replaceState({}, '', u);
+    return true;
+  }
+  const state = q.get('state');
+  if (!state) return false;
+  busy = true;
+  showError('');
+  const label = $('#auth-github')?.querySelector('span');
+  if (label) label.textContent = '正在完成 GitHub 登录…';
+  $('#auth-github') && ($('#auth-github').disabled = true);
+  const started = Date.now();
+  try {
+    while (Date.now() - started < 20_000) {
+      const data = await pollOAuthSession(state);
+      if (data?.account) {
+        const u = new URL(location.href);
+        u.searchParams.delete('oauth');
+        u.searchParams.delete('state');
+        history.replaceState({}, '', u);
+        location.assign(safeNext(data.next) || nextTarget());
+        return true;
+      }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    throw new Error('GitHub 登录超时，请再试一次');
+  } catch (e) {
+    showError(e.message || 'GitHub 登录失败');
+    if (label) label.textContent = '使用 GitHub 登录';
+    if ($('#auth-github')) $('#auth-github').disabled = false;
+    busy = false;
+    const u = new URL(location.href);
+    u.searchParams.delete('oauth');
+    u.searchParams.delete('state');
+    history.replaceState({}, '', u);
+    return true;
+  }
 }
 
 /** 登录成功 / 切号成功：整页跳回，不在这一页里改主应用状态 */
@@ -226,6 +300,8 @@ for (const a of document.querySelectorAll('[data-focus-auth]')) {
 if (isAddMode()) $('#access-add').hidden = false;
 applyMode();
 
+const resumedOauth = await resumeGithubOAuth();
+
 const signedIn = !!currentAccount();
 // 未登录时「返回画布」只会被门禁弹回来，索性藏掉，别给死路
 if (!signedIn) {
@@ -233,10 +309,10 @@ if (!signedIn) {
   document.querySelector('.access-sep').hidden = true;
 }
 
-// 已登录还停在登录页（比如手输地址）：默认回画布，除非是「添加账号」
-if (!isAddMode() && signedIn && !params().get('stay')) {
+// 已登录还停在登录页（比如手输地址）：默认回画布，除非是「添加账号」或正在收 OAuth 回调
+if (!resumedOauth && !isAddMode() && signedIn && !params().get('stay')) {
   location.replace(nextTarget());
-} else if (window.matchMedia('(min-width: 901px)').matches) {
+} else if (!resumedOauth && window.matchMedia('(min-width: 901px)').matches) {
   $('#auth-email').focus({ preventScroll: true });
 }
 

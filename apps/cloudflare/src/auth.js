@@ -5,6 +5,7 @@ const PASSWORD_MIN = 6;
 const NAME_MAX = 24;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const PBKDF2_ITERS = 100_000;
+const OAUTH_STATE_TTL_MS = 5 * 60 * 1000;
 
 export class AuthError extends Error {
   constructor(status, message) {
@@ -19,6 +20,17 @@ const sessionToken = () => {
   crypto.getRandomValues(bytes);
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
+
+function oauthState() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** GitHub OAuth 是否已配置 */
+export function githubOauthConfigured(env) {
+  return Boolean(env?.GITHUB_CLIENT_ID && env?.GITHUB_SECRET);
+}
 
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
@@ -145,6 +157,153 @@ async function resolveRoleForSignup(db, email, env) {
   return 'user';
 }
 
+// ── GitHub OAuth ────────────────────────────────────────────────────────────
+async function startGithubLogin(db, url, env) {
+  if (!githubOauthConfigured(env)) throw new AuthError(503, '站点未配置 GitHub 登录');
+  const state = oauthState();
+  const next = (url.searchParams.get('next') || '/').slice(0, 200);
+  await db
+    .prepare('INSERT INTO auth_oauth_state (state, provider, next, created_at) VALUES (?, ?, ?, ?)')
+    .bind(state, 'github', next, Date.now())
+    .run();
+  const params = new URLSearchParams({
+    client_id: env.GITHUB_CLIENT_ID,
+    redirect_uri: `${url.origin}/api/auth/oauth/github/callback`,
+    scope: 'read:user user:email',
+    state,
+  });
+  return {
+    status: 302,
+    body: null,
+    location: `https://github.com/login/oauth/authorize?${params}`,
+  };
+}
+
+const GITHUB_UA = 'wuch-ai';
+const githubHeaders = (accessToken) => ({
+  Accept: 'application/vnd.github+json',
+  'User-Agent': GITHUB_UA,
+  'X-GitHub-Api-Version': '2022-11-28',
+  ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+});
+
+async function githubCallback(db, url, env) {
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  if (!code || !state) throw new AuthError(400, 'GitHub 回调缺参数');
+
+  const row = await db.prepare('SELECT * FROM auth_oauth_state WHERE state = ?').bind(state).first();
+  if (!row || row.provider !== 'github') throw new AuthError(400, 'GitHub 授权已过期，请重新发起');
+  const now = Date.now();
+  if (row.created_at + OAUTH_STATE_TTL_MS < now) throw new AuthError(400, 'GitHub 授权已过期，请重新发起');
+  await db.prepare('DELETE FROM auth_oauth_state WHERE state = ?').bind(state).run();
+
+  const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+    method: 'POST',
+    headers: { ...githubHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: env.GITHUB_CLIENT_ID,
+      client_secret: env.GITHUB_SECRET,
+      code,
+    }),
+  });
+  const tokenData = await tokenRes.json().catch(() => ({}));
+  const accessToken = tokenData.access_token;
+  if (!accessToken) {
+    throw new AuthError(502, 'GitHub 授权失败：' + (tokenData.error_description || tokenData.error || 'unknown'));
+  }
+
+  const userRes = await fetch('https://api.github.com/user', { headers: githubHeaders(accessToken) });
+  if (!userRes.ok) {
+    const detail = (await userRes.text().catch(() => '')).slice(0, 120);
+    throw new AuthError(502, `GitHub 用户信息获取失败（${userRes.status}）${detail ? '：' + detail : ''}`);
+  }
+  const gh = await userRes.json();
+  const login = String(gh.login || '').trim().toLowerCase();
+  if (!login) throw new AuthError(502, 'GitHub 返回的用户名无效');
+
+  let email = '';
+  if (gh.email && EMAIL_RE.test(gh.email)) email = normalizeEmail(gh.email);
+  if (!email) {
+    const emailsRes = await fetch('https://api.github.com/user/emails', { headers: githubHeaders(accessToken) });
+    if (emailsRes.ok) {
+      const emails = await emailsRes.json();
+      const primary = Array.isArray(emails) && emails.find((e) => e.primary && e.verified);
+      if (primary?.email && EMAIL_RE.test(primary.email)) email = normalizeEmail(primary.email);
+    }
+  }
+
+  const ghName = String(gh.name || login || 'GitHub 用户').trim().slice(0, NAME_MAX);
+  const nowMs = Date.now();
+
+  let account = await db
+    .prepare('SELECT * FROM account WHERE oauth_provider = ? AND github_login = ?')
+    .bind('github', login)
+    .first();
+  if (account) {
+    await db
+      .prepare('UPDATE account SET name = ?, email = ?, updated_at = ? WHERE id = ?')
+      .bind(ghName, email || account.email, nowMs, account.id)
+      .run();
+    account = await db.prepare('SELECT * FROM account WHERE id = ?').bind(account.id).first();
+  } else {
+    let provider = 'github';
+    let storeEmail = email;
+    if (email) {
+      const byEmail = await db.prepare('SELECT * FROM account WHERE email = ?').bind(email).first();
+      if (byEmail) {
+        provider = 'email';
+        storeEmail = email;
+        await db
+          .prepare('UPDATE account SET oauth_provider = ?, github_login = ?, updated_at = ? WHERE id = ?')
+          .bind('github', login, nowMs, byEmail.id)
+          .run();
+        account = await db.prepare('SELECT * FROM account WHERE id = ?').bind(byEmail.id).first();
+      }
+    }
+    if (!account) {
+      const id = accountId();
+      const role = await resolveRoleForSignup(db, email, env);
+      await db
+        .prepare(
+          'INSERT INTO account (id, email, name, provider, password_hash, oauth_provider, github_login, role, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, ?)',
+        )
+        .bind(id, storeEmail || `${login}@users.noreply.github.com`, ghName, provider, 'github', login, role, nowMs, nowMs)
+        .run();
+      account = await db.prepare('SELECT * FROM account WHERE id = ?').bind(id).first();
+    }
+  }
+
+  const token = await issueSession(db, account.id);
+  // wuch-ai 前端用 Bearer token（localStorage），结果里带上 token
+  await db
+    .prepare('INSERT OR REPLACE INTO auth_oauth_result (state, payload, created_at) VALUES (?, ?, ?)')
+    .bind(state, JSON.stringify({ account: toAccount(account), token, next: row.next || '/' }), nowMs)
+    .run();
+  const nextLogin = new URL('/login', url.origin);
+  nextLogin.searchParams.set('oauth', 'github');
+  nextLogin.searchParams.set('state', state);
+  return { status: 302, body: null, location: nextLogin.pathname + nextLogin.search };
+}
+
+async function oauthSession(db, url) {
+  const state = url.searchParams.get('state');
+  if (!state) throw new AuthError(400, '缺少 state');
+  const result = await db.prepare('SELECT * FROM auth_oauth_result WHERE state = ?').bind(state).first();
+  if (result) {
+    const payload = JSON.parse(result.payload);
+    await db.prepare('DELETE FROM auth_oauth_result WHERE state = ?').bind(state).run();
+    return { status: 200, body: payload };
+  }
+  const row = await db.prepare('SELECT * FROM auth_oauth_state WHERE state = ?').bind(state).first();
+  if (!row) throw new AuthError(404, '授权已失效，请重新发起');
+  if (row.created_at + OAUTH_STATE_TTL_MS < Date.now()) {
+    await db.prepare('DELETE FROM auth_oauth_state WHERE state = ?').bind(state).run();
+    throw new AuthError(404, '授权已过期，请重新发起');
+  }
+  return { status: 200, body: { pending: true } };
+}
+
 export async function handleAuth(request, db, path, env) {
   const method = request.method;
   const json = async () => {
@@ -194,8 +353,32 @@ export async function handleAuth(request, db, path, env) {
     return { status: 200, body: { account: toAccount(fresh), token: await issueSession(db, row.id) } };
   }
 
+  if (path === '/auth/oauth/github/config' && method === 'GET') {
+    return { status: 200, body: { enabled: githubOauthConfigured(env) } };
+  }
+  if (path === '/auth/oauth/github' && method === 'GET') {
+    return startGithubLogin(db, new URL(request.url), env);
+  }
+  if (path === '/auth/oauth/github/callback' && method === 'GET') {
+    const cbUrl = new URL(request.url);
+    try {
+      return await githubCallback(db, cbUrl, env);
+    } catch (e) {
+      if (e instanceof AuthError) {
+        const fail = new URL('/login', cbUrl.origin);
+        fail.searchParams.set('oauth', 'github');
+        fail.searchParams.set('error', e.message.slice(0, 160));
+        return { status: 302, body: null, location: fail.pathname + fail.search };
+      }
+      throw e;
+    }
+  }
+  if (path === '/auth/oauth/session' && method === 'GET') {
+    return oauthSession(db, new URL(request.url));
+  }
+
   if (method === 'POST' && path === '/auth/oauth') {
-    throw new AuthError(403, '演示第三方登录已关闭，请用邮箱注册');
+    throw new AuthError(403, '请使用「使用 GitHub 登录」按钮完成授权');
   }
 
   if (method === 'GET' && path === '/auth/me') {

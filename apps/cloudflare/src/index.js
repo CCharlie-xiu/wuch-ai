@@ -112,6 +112,12 @@ export default {
 
         if (rest.startsWith('/auth')) {
           const out = await handleAuth(request, env.DB, rest, env);
+          if (out?.location) {
+            return new Response(null, {
+              status: 302,
+              headers: { Location: out.location, 'Cache-Control': 'no-store' },
+            });
+          }
           return json(out.status, out.body);
         }
 

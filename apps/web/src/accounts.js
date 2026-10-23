@@ -147,10 +147,29 @@ export async function signUp({ email, password, name }) {
   return remember(account, token);
 }
 
-/** 第三方：仍走后端发号 + token */
+/** 第三方演示发号（仅后端未关时可用）；GitHub 真实登录请用 startGithubOAuth */
 export async function signInWith(provider) {
   const { account, token } = await api('POST', '/oauth', { body: { provider } });
   return remember(account, token);
+}
+
+/** 整页跳到 GitHub 授权 */
+export function startGithubOAuth(next = '/') {
+  const u = new URL('/api/auth/oauth/github', location.origin);
+  u.searchParams.set('next', next);
+  location.assign(u);
+}
+
+/**
+ * 回调页轮询：state 换 {account, token, next}。
+ * pending → null；完成 → payload（已 remember）；失效抛错。
+ */
+export async function pollOAuthSession(state) {
+  const data = await api('GET', `/oauth/session?state=${encodeURIComponent(state)}`);
+  if (!data || data.pending) return null;
+  if (data.account && data.token) remember(data.account, data.token);
+  else if (data.account) remember(data.account);
+  return data;
 }
 
 /** 切换本机已登录过的账号（各账号各自带着自己的 token） */

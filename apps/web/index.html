@@ -311,6 +311,18 @@
         <button type="button" data-src="仅会话上下文" role="menuitem">仅会话上下文</button>
         <button type="button" data-src="仅编译产物" role="menuitem">仅编译产物</button>
       </div>
+
+      <!-- 思考强度气泡：四档胶囊，见 src/think-slider.js -->
+      <div id="think-menu" class="menu think-menu hidden" role="dialog" aria-label="思考强度">
+        <div class="think-top">
+          <span class="think-title">思考强度<i id="think-level" class="think-level">高</i></span>
+          <label id="think-switch" class="switch" title="关掉就不思考，响应最快">
+            <input id="think-enabled" type="checkbox"><i></i>
+          </label>
+        </div>
+        <div id="think-pill"></div>
+        <p id="think-hint" class="think-hint">—</p>
+      </div>
     </aside>
 
     <button id="chat-fab" class="chat-fab" title="展开 AI 助手" aria-label="展开 AI 助手">

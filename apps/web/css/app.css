@@ -509,8 +509,78 @@ pre, code, kbd, samp { font-family: var(--mono); }
 }
 .think-btn[hidden] { display: none; }
 .think-btn:hover { color: var(--text); background: var(--panel-2); }
+.think-btn[aria-expanded="true"] { color: var(--text); background: var(--panel-2); }
 .think-btn.on { color: var(--accent); }
 .think-btn.off { color: var(--dim); }
+
+.menu.think-menu {
+  position: fixed; right: auto; bottom: auto; z-index: 60;
+  width: 250px; padding: 12px 12px 11px; gap: 9px;
+}
+.think-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.think-title { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--muted); }
+.think-level { font: inherit; font-size: 12px; font-style: normal; color: var(--text); }
+.re-pill {
+  --re-shell: #f1f3f5;
+  --re-shell-2: #e6e9ed;
+  --re-line: rgba(17, 24, 39, .12);
+  --re-tick: rgba(17, 24, 39, .22);
+  --re-tick-fill: rgba(255, 255, 255, .44);
+  --re-tick-thumb: rgba(17, 24, 39, .32);
+  position: relative; width: 224px; height: 52px;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+}
+.re-shell {
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+  overflow: visible; pointer-events: none;
+}
+.re-shell-top { stop-color: var(--re-shell); }
+.re-shell-bot { stop-color: var(--re-shell-2); }
+.re-outline { stroke: var(--re-line); }
+.re-label {
+  position: absolute; top: 2.5px; z-index: 2;
+  display: flex; gap: 3px;
+  font-size: 10.5px; font-weight: 500; line-height: 14px; letter-spacing: -.01em;
+  white-space: nowrap; pointer-events: none;
+}
+.re-label__lead { color: var(--subtle); }
+.re-label__level { color: var(--text); }
+.re-swap { animation: re-blur-in .18s ease-out; }
+@keyframes re-blur-in {
+  from { filter: blur(2.5px); opacity: .35; }
+  to { filter: blur(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .re-swap { animation: none; }
+}
+.re-track {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 32px;
+  border-radius: 999px; cursor: grab; outline: none;
+}
+.re-pill[data-dragging="true"] .re-track { cursor: grabbing; }
+.re-track:focus-visible { box-shadow: 0 0 0 3px var(--accent-ring); }
+.re-fill {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  border-radius: 999px; background: var(--accent); pointer-events: none;
+}
+.re-thumb {
+  position: absolute; top: 50%; z-index: 2;
+  border-radius: 999px; background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .18), 0 0 0 .5px rgba(16, 24, 40, .08);
+  pointer-events: none;
+}
+.re-tick {
+  position: absolute; top: 50%; z-index: 3; width: 1.5px; margin-left: -.75px;
+  border-radius: 1px; background: var(--re-tick);
+  transform: translateY(-50%); pointer-events: none;
+}
+.re-tick[data-on="fill"] { background: var(--re-tick-fill); }
+.re-tick[data-active="true"] { background: rgba(255, 255, 255, .96); }
+.re-tick[data-on="thumb"] { background: var(--re-tick-thumb); }
+.think-hint { margin: 0; font-size: 11px; line-height: 1.55; color: var(--subtle); }
+.re-pill.is-off .re-fill { background: var(--dim); }
+.re-pill.is-off .re-thumb { background: #f2f3f4; box-shadow: 0 0 0 .5px rgba(16, 24, 40, .1); }
+.re-pill.is-off .re-tick { opacity: .55; }
 
 .composer {
   position: relative;

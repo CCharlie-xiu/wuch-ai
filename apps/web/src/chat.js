@@ -1369,15 +1369,19 @@ const THINK_LEVELS = [
 
 const thinkBtn = $('#think-btn');
 const thinkMenu = $('#think-menu');
-const thinkSliderEl = $('#think-slider');
+const thinkPill = $('#think-pill');
+const thinkLevel = $('#think-level');
 const thinkEnabled = $('#think-enabled');
 const thinkHint = $('#think-hint');
-const thinkSlider = thinkSliderEl
+const thinkSlider = thinkPill
   ? createThinkSlider({
-      root: thinkSliderEl,
-      thumb: $('#think-thumb'),
-      fill: $('#think-fill'),
-      labels: [...thinkMenu.querySelectorAll('.think-tick')],
+      root: thinkPill,
+      stops: THINK_LEVELS.map((l) => l.label),
+      lead: '思考',
+      value: (() => {
+        const i = THINK_LEVELS.findIndex((l) => l.effort === 'high');
+        return i < 0 ? 1 : i;
+      })(),
       onLevel: (i) => pickThink(i),
     })
   : null;
@@ -1409,8 +1413,10 @@ function paintThink() {
 
   // 气泡里的控件跟着状态走（没打开时也同步，下次打开就是对的）
   thinkSlider?.set(i);
+  if (thinkLevel) thinkLevel.textContent = on ? THINK_LEVELS[i].label : '关';
   if (thinkEnabled) thinkEnabled.checked = on;
   if (thinkHint) thinkHint.textContent = on ? THINK_LEVELS[i].hint : '已关闭：不发思考，响应最快';
+  thinkPill?.classList.toggle('is-off', !on);
   thinkMenu?.classList.toggle('is-off', !on);
 }
 

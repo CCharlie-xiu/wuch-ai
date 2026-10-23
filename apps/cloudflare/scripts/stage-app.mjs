@@ -147,10 +147,8 @@ async function main() {
   rewriteImportMaps(OUT);
   stageVendors();
 
-  // 登录别名
-  if (fs.existsSync(path.join(OUT, 'login.html'))) {
-    // Workers assets 不自动做 /login → login.html；放一份无后缀用 Worker 补，或复制
-  }
+  // 介绍页与宣传图：docs/ → /intro.html + /images/*（不覆盖聊天首页）
+  await import(pathToFileURL(path.join(HERE, 'sync-public.mjs')).href);
 
   console.log('done. files:', countFiles(OUT));
 }

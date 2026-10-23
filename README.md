@@ -16,7 +16,7 @@
 
 不用拖控件、不用写前端。右侧对话一句，左侧画布边写边渲染；滑块、勾选和选项就地改，不另调模型。会话、记忆和知识库留在你这边。
 
-**在线试用 → [https://wuch-ai.net](https://wuch-ai.net)** · [演示回放](https://wuch-ai.net/demos.html)（不连模型也能看） · [介绍页](docs/index.html)
+**在线试用 → [https://wuch-ai.net](https://wuch-ai.net)** · [演示回放](https://wuch-ai.net/demos.html)（不连模型也能看） · [介绍页](https://wuch-ai.net/intro)
 
 <p align="center">
   <img src="docs/images/demo-walkthrough.gif" alt="登录 → 演示：Excel 销售分析与产品仪表盘流式生成" width="720">
@@ -95,6 +95,8 @@ bun run mock         # 可选：没 Key 时用假上游 http://127.0.0.1:8789/v1
 ## 链接
 
 - 产品：[https://wuch-ai.net](https://wuch-ai.net)
+- 介绍：[https://wuch-ai.net/intro](https://wuch-ai.net/intro)
 - 演示：[https://wuch-ai.net/demos.html](https://wuch-ai.net/demos.html)
 - 仓库：[https://github.com/CCharlie-xiu/wuch-ai](https://github.com/CCharlie-xiu/wuch-ai)
+- 参与：[CONTRIBUTING.md](CONTRIBUTING.md)
 - 许可：[MIT](LICENSE)

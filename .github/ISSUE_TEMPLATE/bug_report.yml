@@ -1,0 +1,39 @@
+name: Bug 报告
+description: 行为与预期不符
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: where
+    attributes:
+      label: 在哪里遇到
+      options:
+        - 在线版 wuch-ai.net
+        - 本地 bun run dev
+        - 演示回放 /demos.html
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 
+        2. 
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      description: 浏览器与版本；本地运行再写 Bun 版本
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志或截图
+      description: 顶栏检视器里的诊断也可贴。先去掉 API Key 等敏感信息。

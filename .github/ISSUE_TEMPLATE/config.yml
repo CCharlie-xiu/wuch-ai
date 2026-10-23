@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 在线试用
+    url: https://wuch-ai.net
+    about: 先在线体验，再决定是否提 Issue

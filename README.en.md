@@ -16,7 +16,7 @@
 
 No drag-and-drop builder, no hand-written frontend. One message in the chat pane; the left canvas streams and renders as it goes. Sliders, checkboxes, and options update in place—no extra model round-trip. Sessions, memory, and knowledge stay on your side.
 
-**Try it → [https://wuch-ai.net](https://wuch-ai.net)** · [Demo replay](https://wuch-ai.net/demos.html) (no model key required) · [Intro](docs/index.html)
+**Try it → [https://wuch-ai.net](https://wuch-ai.net)** · [Demo replay](https://wuch-ai.net/demos.html) (no model key required) · [Intro](https://wuch-ai.net/intro)
 
 <p align="center">
   <img src="docs/images/demo-walkthrough.gif" alt="Login → demos: Excel sales analysis and product dashboard streaming" width="720">
@@ -95,6 +95,8 @@ Deeper design notes live in `DESIGN.md`, `DESIGN-KB.md`, and `docs/`—you don�
 ## Links
 
 - Product: [https://wuch-ai.net](https://wuch-ai.net)
+- Intro: [https://wuch-ai.net/intro](https://wuch-ai.net/intro)
 - Demos: [https://wuch-ai.net/demos.html](https://wuch-ai.net/demos.html)
 - Repo: [https://github.com/CCharlie-xiu/wuch-ai](https://github.com/CCharlie-xiu/wuch-ai)
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - License: [MIT](LICENSE)

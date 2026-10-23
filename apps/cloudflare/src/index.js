@@ -60,10 +60,17 @@ function stub(path, method) {
 
 async function serveAssets(request, env, url) {
   if (!env.ASSETS) return new Response('ASSETS binding missing', { status: 500 });
-  // /login → login.html；/ → index.html（资产目录里已有）
-  if (url.pathname === '/login' || url.pathname === '/login/') {
+  // /login → login.html；/intro → intro.html；/ → index.html（资产目录里已有）
+  const aliases = {
+    '/login': '/login.html',
+    '/login/': '/login.html',
+    '/intro': '/intro.html',
+    '/intro/': '/intro.html',
+  };
+  const alias = aliases[url.pathname];
+  if (alias) {
     const u = new URL(request.url);
-    u.pathname = '/login.html';
+    u.pathname = alias;
     return env.ASSETS.fetch(new Request(u, request));
   }
   return env.ASSETS.fetch(request);

@@ -49,6 +49,9 @@ const EXACT = {
   // 两种写法都收：/login 是给地址栏看的，/login.html 方便静态托管直接命中。
   '/login': () => path.join(WEB, 'login.html'),
   '/login.html': () => path.join(WEB, 'login.html'),
+  // 介绍页：源文件在 docs/，本地与线上同一路径 /intro
+  '/intro': () => path.join(REPO_ROOT, 'docs', 'index.html'),
+  '/intro.html': () => path.join(REPO_ROOT, 'docs', 'index.html'),
 
   // 约定路径：apps/web/src/session.js 用 runnerFrame.src = 'runner.html' 加载沙箱宿主
   '/runner.html': () => path.join(WEB, 'public', 'runner.html'),
@@ -67,6 +70,8 @@ const EXACT = {
 const PREFIXES = [
   ['/src/', () => path.join(WEB, 'src')],
   ['/css/', () => path.join(WEB, 'css')],
+  // 介绍页宣传图（docs/images）
+  ['/images/', () => path.join(REPO_ROOT, 'docs', 'images')],
   // 共享包源码：供浏览器 import map 解析 @openui-lab/*（见 apps/web/*.html）
   ['/packages/', () => path.join(REPO_ROOT, 'packages')],
   // 公式：Formula 组件按需 import('katex')，样式表和字体按相对路径从同一目录取
@@ -87,6 +92,9 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',
@@ -230,7 +238,7 @@ http
   })
   .listen(PORT, HOST, () => {
     const lan = HOST === '127.0.0.1' || HOST === 'localhost' ? [] : lanAddresses();
-    console.log(`OpenUI Lab    http://127.0.0.1:${PORT}/`);
+    console.log(`wuch-ai       http://127.0.0.1:${PORT}/`);
     for (const ip of lan) console.log(`  局域网访问  http://${ip}:${PORT}/`);
     console.log(`演示回放      http://127.0.0.1:${PORT}/demos.html`);
     console.log(`上游转发      http://127.0.0.1:${PORT}/proxy?url=<上游地址>`);

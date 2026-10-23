@@ -99,4 +99,5 @@ bun run mock         # 可选：没 Key 时用假上游 http://127.0.0.1:8789/v1
 - 演示：[https://wuch-ai.net/demos.html](https://wuch-ai.net/demos.html)
 - 仓库：[https://github.com/CCharlie-xiu/wuch-ai](https://github.com/CCharlie-xiu/wuch-ai)
 - 参与：[CONTRIBUTING.md](CONTRIBUTING.md)
+- 安全：[SECURITY.md](SECURITY.md)
 - 许可：[MIT](LICENSE)

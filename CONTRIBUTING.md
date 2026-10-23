@@ -1,5 +1,7 @@
 # 参与贡献
 
+**中文** | [English](CONTRIBUTING.en.md)
+
 ## 开始
 
 ```bash
@@ -49,4 +51,4 @@ bun run typecheck:dsl
 ## Issue
 
 - Bug 和功能建议用 Issue 模板
-- 安全问题不要开公开 Issue，见 [SECURITY.md](SECURITY.md)
+- 安全问题不要开公开 Issue，见 [SECURITY.md](SECURITY.md)（[English](SECURITY.en.md)）

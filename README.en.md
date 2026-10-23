@@ -98,5 +98,6 @@ Deeper design notes live in `DESIGN.md`, `DESIGN-KB.md`, and `docs/`â€”you donâ€
 - Intro: [https://wuch-ai.net/intro](https://wuch-ai.net/intro)
 - Demos: [https://wuch-ai.net/demos.html](https://wuch-ai.net/demos.html)
 - Repo: [https://github.com/CCharlie-xiu/wuch-ai](https://github.com/CCharlie-xiu/wuch-ai)
-- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Contributing: [CONTRIBUTING.en.md](CONTRIBUTING.en.md)
+- Security: [SECURITY.en.md](SECURITY.en.md)
 - License: [MIT](LICENSE)

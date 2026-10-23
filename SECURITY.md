@@ -1,5 +1,7 @@
 # 安全
 
+**中文** | [English](SECURITY.en.md)
+
 ## 报告漏洞
 
 请不要开公开 Issue 报告安全问题。

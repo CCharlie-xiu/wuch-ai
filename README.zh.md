@@ -100,5 +100,5 @@ bun run mock         # 可选：没 Key 时用假上游 http://127.0.0.1:8789/v1
 - 仓库：[https://github.com/CCharlie-xiu/wuch-ai](https://github.com/CCharlie-xiu/wuch-ai)
 - 参与：[CONTRIBUTING.zh.md](CONTRIBUTING.zh.md)
 - 安全：[SECURITY.zh.md](SECURITY.zh.md)
-- 赞助 / 联系：[chouxiucheng@gmail.com](mailto:chouxiucheng@gmail.com) · [Sponsor](https://github.com/sponsors/CCharlie-xiu)
+- 赞助 / 联系：[chouxiucheng@gmail.com](mailto:chouxiucheng@gmail.com)
 - 许可：[MIT](LICENSE)

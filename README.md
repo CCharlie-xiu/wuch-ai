@@ -100,5 +100,5 @@ Deeper design notes live in `DESIGN.md`, `DESIGN-KB.md`, and `docs/`—you don�
 - Repo: [https://github.com/CCharlie-xiu/wuch-ai](https://github.com/CCharlie-xiu/wuch-ai)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security: [SECURITY.md](SECURITY.md)
-- Sponsor / contact: [chouxiucheng@gmail.com](mailto:chouxiucheng@gmail.com) · [Sponsor](https://github.com/sponsors/CCharlie-xiu)
+- Sponsor / contact: [chouxiucheng@gmail.com](mailto:chouxiucheng@gmail.com)
 - License: [MIT](LICENSE)
